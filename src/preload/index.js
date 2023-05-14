@@ -1,17 +1,17 @@
-import { electronAPI as toolkit } from "@electron-toolkit/preload";
+import { electronAPI } from "@electron-toolkit/preload";
 import { contextBridge, ipcRenderer } from "electron";
 
 const versions = {
   node: () => process.versions.node,
   chrome: () => process.versions.chrome,
   electron: () => process.versions.electron,
-  test: () => ipcRenderer.invoke("test"),
-  getFilePaths: () => ipcRenderer.invoke("getFilePaths")
-  // 関数だけでなく、変数も公開できます
+  test: () => ipcRenderer.invoke("test")
 };
 
-const electronAPI = {
-  handleHelpMenu: (callback) => ipcRenderer.on("handleHelpMenu", callback)
+const api = {
+  selectDir: (path) => ipcRenderer.invoke("selectDir", path),
+  start: (path) => ipcRenderer.invoke("Localization:start", path),
+  logging: (callback) => ipcRenderer.on("Localization:logging", callback)
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -19,14 +19,14 @@ const electronAPI = {
 // just add to the DOM global.
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld("electron", toolkit);
+    contextBridge.exposeInMainWorld("electron", electronAPI);
     contextBridge.exposeInMainWorld("versions", versions);
-    contextBridge.exposeInMainWorld("electronAPI", electronAPI);
+    contextBridge.exposeInMainWorld("api", api);
   } catch (error) {
     console.error(error);
   }
 } else {
   window.electron = electronAPI;
   window.versions = versions;
-  window.electronAPI = electronAPI;
+  window.api = api;
 }

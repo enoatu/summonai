@@ -2,11 +2,12 @@ import { app, BrowserWindow, ipcMain, Menu, shell, dialog } from "electron";
 import { electronApp, is } from "@electron-toolkit/utils";
 import constants from "@common/constants";
 import path from "path";
+import utils from "@common/utils";
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: is.dev ? 1000 : 600,
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       sandbox: false
@@ -40,18 +41,51 @@ const createWindow = () => {
   Menu.setApplicationMenu(menu);
 
   // メインプロセスで `getFilePaths` イベントを受け取ったら、フォルダ内のファイルパスを取得してレンダラープロセスに返す
-  ipcMain.handle("selectDirectory", async (event, path) => {
-    const selectedDirectories = await dialog.showOpenDialog({
+  ipcMain.handle("selectDir", async (event, path) => {
+    const selectedDirs = await dialog.showOpenDialog({
       defaultPath: path || constants.steamPath,
       properties: ["openDirectory"]
     });
-    if (!selectedDirectories) {
-      return;
+    console.log("selectDir", selectedDirs);
+    if (!selectedDirs || selectedDirs.cancelled) {
+      return "";
     }
-    event.returnValue = selectedDirectories[0];
+    return selectedDirs.filePaths[0];
   });
 
   mainWindow.loadFile("index.html");
+
+  ipcMain.handle("Localization:start", async (_event, path) => {
+    console.log("Localization:start", path);
+    if (!path || path === "") {
+      return;
+    }
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}: 開始 in ${path}`);
+    await utils.sleep(1000);
+    mainWindow.webContents.send("Localization:logging", `${utils.dateTime()}:終了`);
+  });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -70,7 +104,7 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
   // Set app user model id for windows
-  electronApp.setAppUserModelId("com.electron");
+  electronApp.setAppUserModelId("com.enoatu");
   createWindow();
 
   app.on("activate", () => {

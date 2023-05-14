@@ -1,10 +1,7 @@
 {
-  "name": "7dtdlocalizer",
+  "name": "7dtdLocalizerApp",
   "version": "1.0.0",
-  "description": "An Electron application with React",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://www.electronjs.org",
   "scripts": {
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
