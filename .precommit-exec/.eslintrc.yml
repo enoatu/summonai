@@ -1,16 +1,30 @@
+root: true
 env:
   browser: true
   es2021: true
+  commonjs: true,
   node: true
 extends:
   - "eslint:recommended"
   - "prettier"
+  - "plugin:react/recommended"
+  - "plugin:react/jsx-runtime"
+  - "plugin:react-hooks/recommended"
 parserOptions:
-  ecmaVersion: 13
+  ecmaVersion: latest
+  ecmaFeatures:
+    jsx: true
+  sourceType: module
+plugins:
+  - "react-refresh"
+settings:
+  react:
+    version: "18.2"
 rules:
   quotes:
     - error
     - double
-  prefer-const: 'error'
+  prefer-const: "error"
+  react-refresh/only-export-components: "warn"
 globals:
   versions: true

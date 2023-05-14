@@ -1,16 +1,15 @@
-const { app, BrowserWindow, ipcMain, Menu, shell, dialog } = require("electron");
-const utils = require('./utils');
-const constants = require('./constants');
-const path = require("path");
-const fs = require('fs');
+import { app, BrowserWindow, ipcMain, Menu, shell, dialog } from "electron";
+import { electronApp, is } from "@electron-toolkit/utils";
+import constants from "@common/constants";
+import path from "path";
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
-      backgroundColor: 'black',
-      preload: path.join(__dirname, "preload.js")
+      preload: path.join(__dirname, "../preload/index.js"),
+      sandbox: false
     }
   });
 
@@ -19,32 +18,32 @@ const createWindow = () => {
       label: app.name,
       submenu: [
         {
-          role: 'quit',
-        },
+          role: "quit"
+        }
       ]
     },
     {
-      role: 'windowMenu',
+      role: "windowMenu"
     },
     {
-      label: 'Information',
+      label: "Information",
       submenu: [
         {
-          label: 'Help',
+          label: "Help",
           click: async () => {
-            await shell.openExternal(constants.webHelpPageUrl)
+            await shell.openExternal(constants.webHelpPageUrl);
           }
-        },
+        }
       ]
     }
-  ])
-  Menu.setApplicationMenu(menu)
+  ]);
+  Menu.setApplicationMenu(menu);
 
   // メインプロセスで `getFilePaths` イベントを受け取ったら、フォルダ内のファイルパスを取得してレンダラープロセスに返す
-  ipcMain.handle('selectDirectory', async (event, path) => {
+  ipcMain.handle("selectDirectory", async (event, path) => {
     const selectedDirectories = await dialog.showOpenDialog({
       defaultPath: path || constants.steamPath,
-      properties: ['openDirectory']
+      properties: ["openDirectory"]
     });
     if (!selectedDirectories) {
       return;
@@ -54,14 +53,24 @@ const createWindow = () => {
 
   mainWindow.loadFile("index.html");
 
+  // HMR for renderer base on electron-vite cli.
+  // Load the remote URL for development or the local html file for production.
+  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+    mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
+  }
+
   // devtoolsを開く
   console.log({
     env: process.env.NODE_ENV
-  })
+  });
   mainWindow.webContents.openDevTools();
 };
 
 app.whenReady().then(() => {
+  // Set app user model id for windows
+  electronApp.setAppUserModelId("com.electron");
   createWindow();
 
   app.on("activate", () => {
@@ -71,10 +80,12 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("test", () => {
-    console.log('test');
+    console.log("test");
   });
 });
 
 app.on("window-all-closed", () => {
-  app.quit();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });
