@@ -2,19 +2,17 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'" />
+    <title>7dtdLocalizer</title>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
+    <h1>7dtd Localizer</h1>
+    <label for="folderPath">フォルダのパス:</label>
+    <input type="text" id="folder-path" name="folderPath"><br>
+    <button id="open-folder-button" type="button">フォルダを選択</button>
+    <button id="start-button" type="button">日本語化を実行する</button>
+    <br>
     <p id="info"></p>
   </body>
   <script src="./renderer.js"></script>
