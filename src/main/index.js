@@ -146,7 +146,7 @@ const store = {
       });
       uIOhook.on("click", async (e) => {
         console.log("click", e.clicks);
-        if (store.icon.isShow) {
+        if (store.icon.window.isVisible()) {
           const [winX, winY] = store.icon.window.getPosition();
           // カーソルの位置を取得
           const { x, y } = screen.getCursorScreenPoint();
@@ -183,11 +183,10 @@ const store = {
   },
   icon: {
     window: null,
-    isShow: false,
     create: function() {
       this.window = new BrowserWindow({
-        width: 20, // 幅と高さを最小に設定
-        height: 20,
+        width: 30, // 幅と高さを最小に設定
+        height: 30,
         position: { x: 0, y: 0 }, // 画面の左上に表示
         webPreferences: {
           nodeIntegration: true,
@@ -203,6 +202,8 @@ const store = {
         // focusable: false,
       });
       this.window.loadFile('src/icon/index.html');
+      this.window.setIgnoreMouseEvents(true);
+      this.window.setAlwaysOnTop(true, "floating");
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
       // この部分は必要なアクションに合わせてカスタマイズ
@@ -216,7 +217,7 @@ const store = {
     },
     show: async function() {
       await (async () => {
-        if (this.isShow) {
+        if (this.window.isVisible()) {
           return;
         }
         const { x, y } = screen.getCursorScreenPoint();
@@ -224,20 +225,17 @@ const store = {
         // this.window.setSize(iconSize, iconSize);
         this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
         this.window.show();
-
-        this.isShow = true;
       })();
     },
     hide: async function () {
       await (async () => {
-        if (!this.isShow) {
+        if (!this.window.isVisible()) {
           return;
         }
         const iconSize = 0; // アイコンのサイズ
         this.window.hide();
        //  this.window.setSize(iconSize, iconSize);
        //  this.window.setPosition(0, 0); // 右下にアイコンを表示
-        this.isShow = false;
       })();
     },
   }
@@ -256,7 +254,7 @@ const getMacSelectedText = async () => {
     console.log('getSection Failed');
     releaseKeys();
     text = await getSelectedTextByClipboard();
-    console.log('getSelectedTextByClipboard Success', text);
+    console.log('getSelectedTextByClipboard Text=', text);
   }
   return text;
 }
