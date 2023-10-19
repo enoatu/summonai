@@ -10,7 +10,7 @@ export default defineConfig({
         "@": resolve("src"),
         "@common": resolve("src/common")
       }
-    }
+    },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
