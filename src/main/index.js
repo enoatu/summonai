@@ -34,12 +34,15 @@ const store = {
           const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
           let isSelectedEvent = false;
           if (isPressed && pressedTime > 300 && mouseDistance > 20) {
+            console.log("long press");
             isSelectedEvent = true;
           }
           if (previousReleaseTime !== 0 && isDoubleClick) {
+            console.log("double click");
             isSelectedEvent = true;
           }
           if (isSelectedEvent) {
+            console.log("selected event");
             getMacSelectedText().then(text => {
               if (text) {
                 console.log("text", text);
@@ -172,10 +175,10 @@ const getSelectedTextByClipboard = async () => {
   const currentClipboardContent = clipboard.readText();
   console.log("origin clipboard text : ", currentClipboardContent);
   clipboard.clear();
-  // await sleep(10)
+  await sleep(400)
   console.log("do copy");
   robotjs.keyToggle("c", "down", isMac ? "command" : "control");
-  await sleep(10)
+  await sleep(100)
   robotjs.keyToggle("c", "up", isMac ? "command" : "control");
   const selectedText = clipboard.readText();
   console.log("new clipboard text : ", selectedText);
