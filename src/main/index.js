@@ -41,19 +41,19 @@ const store = {
           const pressedTime = currentReleaseTime - previousPressTime;
           const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
           let isSelectedEvent = false;
-          if (isPressed && pressedTime > 300 && mouseDistance > 20) {
-            console.log("long press");
+          if (isPressed && pressedTime > 50 && mouseDistance > 20) {
+            console.log("[mouseup]long press");
             isSelectedEvent = true;
           }
           if (previousReleaseTime !== 0 && isDoubleClick) {
-            console.log("double click");
+            console.log("[mouseup]double click");
             isSelectedEvent = true;
           }
           if (isSelectedEvent) {
-            console.log("selected event");
+            console.log("[mouseup]selected event");
             const text = await getMacSelectedText()
             if (text) {
-              console.log("text", text);
+              console.log("[mouseup]text", text);
               await store.icon.show();
             }
           }
@@ -61,7 +61,7 @@ const store = {
         control.isMouseUping = false;
       });
       uIOhook.on("click", async (e) => {
-        console.log("click", e.clicks);
+        console.log("[click]click", e.clicks);
         if (store.icon.window.isVisible()) {
           const [winX, winY] = store.icon.window.getPosition();
           // カーソルの位置を取得
@@ -70,12 +70,12 @@ const store = {
           const statusY = winY - y;
           console.log(x, y, winX, winY, statusX, statusY)
           if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
-            console.log("click!!!!!!!!!");
+            console.log("[click]click!!!!!!!!!");
             return;
           }
           if (statusX > 5 || statusY > 5 || statusX < -5 || statusY < -5) {
             await store.icon.hide();
-            console.log("hide icon");
+            console.log("[click]hide icon");
           }
         }
       });
@@ -86,7 +86,7 @@ const store = {
       uIOhook.on("keyup", async (e) => {
         if (store.control.isMouseUping) {
           await store.icon.hide();
-          console.log("keyup => hide");
+          console.log("[keyup]hide");
         }
       });
       uIOhook.start();
