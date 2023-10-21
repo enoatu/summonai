@@ -17,6 +17,15 @@ const store = {
         if (e.button === 1) {
           control.prevPressTime = (new Date()).getTime();
         }
+        const [winX, winY] = store.icon.window.getPosition();
+        // カーソルの位置を取得
+        const { x, y } = screen.getCursorScreenPoint();
+        const statusX = winX - x;
+        const statusY = winY - y;
+        // console.log(x, y, winX, winY, statusX, statusY)
+        if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
+          console.log("[mousedown]icon click!!!!!!!!!");
+        }
       });
       uIOhook.on("mouseup", async (e) => {
         const { control } = store;
@@ -68,15 +77,15 @@ const store = {
           const { x, y } = screen.getCursorScreenPoint();
           const statusX = winX - x;
           const statusY = winY - y;
-          console.log(x, y, winX, winY, statusX, statusY)
+          // console.log(x, y, winX, winY, statusX, statusY)
           if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
             console.log("[click]click!!!!!!!!!");
             return;
           }
-          if (statusX > 5 || statusY > 5 || statusX < -5 || statusY < -5) {
-            await store.icon.hide();
-            console.log("[click]hide icon");
-          }
+          // if (statusX > 5 || statusY > 5 || statusX < -5 || statusY < -5) {
+          await store.icon.hide();
+          console.log("[click]hide icon");
+          // }
         }
       });
       uIOhook.on("wheel", async () => {
@@ -84,10 +93,6 @@ const store = {
           // console.log("wheel => hide");
       });
       uIOhook.on("keyup", async (e) => {
-        if (store.control.isMouseUping) {
-          await store.icon.hide();
-          console.log("[keyup]hide");
-        }
       });
       uIOhook.start();
 
