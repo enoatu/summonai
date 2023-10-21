@@ -4,6 +4,14 @@ import { uIOhook, UiohookKey } from 'uiohook-napi'
 import robotjs from '@jitsi/robotjs';
 import { sleep, isMac } from "@/utils";
 import { getSelection } from 'node-selection';
+const ICON_SIZE = {
+  WIDTH: 30,
+  HEIGHT: 30,
+}
+const ICON_SPREAD_SIZE = {
+  WIDTH: 300,
+  HEIGHT: 300,
+}
 const store = {
   main: {
     isWillQuit: false,
@@ -11,9 +19,6 @@ const store = {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
         const { control } = store;
-        if (!control.isMouseUping) {
-          await store.icon.hide();
-        }
         if (e.button === 1) {
           control.prevPressTime = (new Date()).getTime();
         }
@@ -22,9 +27,28 @@ const store = {
         const { x, y } = screen.getCursorScreenPoint();
         const statusX = winX - x;
         const statusY = winY - y;
-        // console.log(x, y, winX, winY, statusX, statusY)
-        if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
+        if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
           console.log("[mousedown]icon click!!!!!!!!!");
+          control.isIconSpread = true;
+          store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
+          const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH/2, y: winY - ICON_SPREAD_SIZE.HEIGHT/2};
+          if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
+            newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
+          }
+          if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
+            newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
+          }
+          if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
+            newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
+          }
+          if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
+            newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
+          }
+          store.icon.window.setPosition(newPos.x, newPos.y);
+          return
+        }
+        if (!control.isMouseUping) {
+          await store.icon.hide();
         }
       });
       uIOhook.on("mouseup", async (e) => {
@@ -70,6 +94,7 @@ const store = {
         control.isMouseUping = false;
       });
       uIOhook.on("click", async (e) => {
+        const { control } = store;
         console.log("[click]click", e.clicks);
         if (store.icon.window.isVisible()) {
           const [winX, winY] = store.icon.window.getPosition();
@@ -77,15 +102,22 @@ const store = {
           const { x, y } = screen.getCursorScreenPoint();
           const statusX = winX - x;
           const statusY = winY - y;
-          // console.log(x, y, winX, winY, statusX, statusY)
-          if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
-            console.log("[click]click!!!!!!!!!");
-            return;
-          }
-          // if (statusX > 5 || statusY > 5 || statusX < -5 || statusY < -5) {
-          await store.icon.hide();
-          console.log("[click]hide icon");
+          if (!control.isIconSpread) {
+            if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
+              console.log("[click]click!!!!!!!!!");
+              return;
+            }
+            await store.icon.hide();
+            console.log("[click]hide icon");
           // }
+          } else {
+            // 展開中
+            if (statusX > -ICON_SPREAD_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SPREAD_SIZE.HEIGHT && statusY < 0) {
+              return;
+            }
+            await store.icon.hide();
+            console.log("[click]hide icon");
+          }
         }
       });
       uIOhook.on("wheel", async () => {
@@ -105,6 +137,7 @@ const store = {
     prevReleaseTime: 0,
     prevReleasePosition: { x: 0, y: 0 },
     isMouseUping: false,
+    isIconSpread: false,
   },
   icon: {
     window: null,
