@@ -10,12 +10,20 @@ const store = {
     init: function() {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
+        const { control } = store;
+        if (!control.isMouseUping) {
+          await store.icon.hide();
+        }
         if (e.button === 1) {
-          store.control.prevPressTime = (new Date()).getTime();
+          control.prevPressTime = (new Date()).getTime();
         }
       });
       uIOhook.on("mouseup", async (e) => {
         const { control } = store;
+        if (control.isMouseUping) {
+          return;
+        }
+        control.isMouseUping = true;
         if (e.button === 1) {
           const { x, y } = e;
           const currentReleaseTime = (new Date()).getTime();
@@ -43,17 +51,14 @@ const store = {
           }
           if (isSelectedEvent) {
             console.log("selected event");
-            getMacSelectedText().then(text => {
-              if (text) {
-                console.log("text", text);
-                store.icon.show();
-              }
-            }).catch(error => {
-              console.error("errorだ", error);
-            });
-            return;
+            const text = await getMacSelectedText()
+            if (text) {
+              console.log("text", text);
+              await store.icon.show();
+            }
           }
         }
+        control.isMouseUping = false;
       });
       uIOhook.on("click", async (e) => {
         console.log("click", e.clicks);
@@ -63,13 +68,13 @@ const store = {
           const { x, y } = screen.getCursorScreenPoint();
           const statusX = winX - x;
           const statusY = winY - y;
-          console.log(x, y, winX, winY)
-          if (statusX > 0 && statusX < 20 && statusY > 0 && statusY < 20) {
+          console.log(x, y, winX, winY, statusX, statusY)
+          if (statusX > -20 && statusX < 0 && statusY > -20 && statusY < 0) {
             console.log("click!!!!!!!!!");
             return;
           }
           if (statusX > 5 || statusY > 5 || statusX < -5 || statusY < -5) {
-            store.icon.hide();
+            await store.icon.hide();
             console.log("hide icon");
           }
         }
@@ -79,8 +84,10 @@ const store = {
           // console.log("wheel => hide");
       });
       uIOhook.on("keyup", async (e) => {
-        // store.icon.hide();
-        // console.log("keyup => hide");
+        if (store.control.isMouseUping) {
+          await store.icon.hide();
+          console.log("keyup => hide");
+        }
       });
       uIOhook.start();
 
@@ -92,6 +99,7 @@ const store = {
     prevPressTime: 0,
     prevReleaseTime: 0,
     prevReleasePosition: { x: 0, y: 0 },
+    isMouseUping: false,
   },
   icon: {
     window: null,
@@ -103,7 +111,7 @@ const store = {
         webPreferences: {
           nodeIntegration: true,
         },
-        transparent: false,
+        transparent: true,
         frame: false,
         resizable: false,
         alwaysOnTop: true,
@@ -128,27 +136,24 @@ const store = {
       // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
     },
     show: async function() {
-      await (async () => {
-        if (this.window.isVisible()) {
-          return;
-        }
-        const { x, y } = screen.getCursorScreenPoint();
-        const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
-        // this.window.setSize(iconSize, iconSize);
-        this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
-        this.window.show();
-      })();
+      if (this.window.isVisible()) {
+        return;
+      }
+      const { x, y } = screen.getCursorScreenPoint();
+      const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
+      // this.window.setSize(iconSize, iconSize);
+      this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
+      this.window.setVisibleOnAllWorkspaces(true);
+      this.window.showInactive();
     },
     hide: async function () {
-      await (async () => {
-        if (!this.window.isVisible()) {
-          return;
-        }
-        const iconSize = 0; // アイコンのサイズ
-        this.window.hide();
-       //  this.window.setSize(iconSize, iconSize);
-       //  this.window.setPosition(0, 0); // 右下にアイコンを表示
-      })();
+      if (!this.window.isVisible()) {
+        return;
+      }
+      const iconSize = 0; // アイコンのサイズ
+      this.window.hide();
+      //  this.window.setSize(iconSize, iconSize);
+      //  this.window.setPosition(0, 0); // 右下にアイコンを表示
     },
   }
 }
