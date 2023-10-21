@@ -50,7 +50,7 @@ const store = {
           const pressedTime = currentReleaseTime - previousPressTime;
           const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
           let isSelectedEvent = false;
-          if (isPressed && pressedTime > 50 && mouseDistance > 20) {
+          if (isPressed && pressedTime > 100 && mouseDistance > 20) {
             console.log("[mouseup]long press");
             isSelectedEvent = true;
           }
