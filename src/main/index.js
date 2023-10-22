@@ -31,6 +31,7 @@ const store = {
         if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
           console.log("[mousedown]icon click!!!!!!!!!");
           control.isIconSpread = true;
+          store.icon.window.webContents.send("ICON_SPREAD");
           store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
           const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH/2, y: winY - ICON_SPREAD_SIZE.HEIGHT/2};
           if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
@@ -150,11 +151,12 @@ const store = {
     window: null,
     create: function() {
       this.window = new BrowserWindow({
-        width: 30, // 幅と高さを最小に設定
-        height: 30,
+        width: ICON_SIZE.WIDTH, // 幅と高さを最小に設定
+        height: ICON_SIZE.HEIGHT,
         position: { x: 0, y: 0 }, // 画面の左上に表示
         webPreferences: {
           nodeIntegration: true,
+          preload: (path.join(__dirname, "../preload/index.js")),
         },
         transparent: true,
         frame: false,
@@ -164,15 +166,15 @@ const store = {
         // skipTaskbar: true,
         // hasShadow: false,
         // type: "panel",
-        // focusable: false,
+        focusable: true,
       });
      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
        this.window.loadURL(process.env["ELECTRON_RENDERER_URL"]);
      } else {
-        this.window.loadFile(path.join(__dirname, "../renderer/icon.html"));
+        this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
      }
-      // this.window.setIgnoreMouseEvents(true);
-      this.window.setAlwaysOnTop(true, "floating");
+     //  // this.window.setIgnoreMouseEvents(true);
+     // this.window.setAlwaysOnTop(true, "floating");
 
       const d = new BrowserWindow({
         width: 800, // 幅と高さを最小に設定
@@ -180,6 +182,7 @@ const store = {
         position: { x: 0, y: 0 }, // 画面の左上に表示
         webPreferences: {
           nodeIntegration: true,
+          preload: (path.join(__dirname, "../preload/index.js")),
         },
        // transparent: true,
        // frame: false,
@@ -196,9 +199,9 @@ const store = {
       } else {
         d.loadFile(path.join(__dirname, "../renderer/icon.html"));
       }
-      //d.setIgnoreMouseEvents(true);
-      //d.setAlwaysOnTop(true, "floating");
-      d.webContents.openDevTools()
+     d.setAlwaysOnTop(true, "floating");
+     d.webContents.openDevTools()
+      //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
       // この部分は必要なアクションに合わせてカスタマイズ

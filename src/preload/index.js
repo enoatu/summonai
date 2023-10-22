@@ -8,10 +8,13 @@ const versions = {
   test: () => ipcRenderer.invoke("test")
 };
 
+// invoke: renderer -> main
+// on: main -> renderer
 const api = {
   selectDir: (path) => ipcRenderer.invoke("selectDir", path),
   start: (path) => ipcRenderer.invoke("Localization:start", path),
-  logging: (callback) => ipcRenderer.on("Localization:logging", callback)
+  logging: (callback) => ipcRenderer.on("Localization:logging", callback),
+  ICON_SPREAD: (callback) => ipcRenderer.on("ICON_SPREAD", callback),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
