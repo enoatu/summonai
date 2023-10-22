@@ -29,6 +29,6 @@ export default defineConfig({
         "@common": resolve("src/common"),
         "@renderer": resolve("src/renderer/src")
       }
-    }
+    },
   }
 });

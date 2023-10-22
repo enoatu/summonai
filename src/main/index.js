@@ -1,8 +1,9 @@
 import { app, BrowserWindow, ipcMain, screen, clipboard } from "electron";
-import { electronApp } from "@electron-toolkit/utils";
+import { electronApp, is } from "@electron-toolkit/utils";
 import { uIOhook, UiohookKey } from 'uiohook-napi'
 import robotjs from '@jitsi/robotjs';
 import { sleep, isMac } from "@/utils";
+import path from "path";
 import { getSelection } from 'node-selection';
 const ICON_SIZE = {
   WIDTH: 30,
@@ -126,6 +127,11 @@ const store = {
       });
       uIOhook.on("keyup", async (e) => {
       });
+      uIOhook.on("keydown", async (e) => {
+        const { control } = store;
+        control.keydownTime = (new Date()).getTime();
+        console.log("[keydown]", control.keydownTime);
+      });
       uIOhook.start();
 
       // 以下の対策のために確認するようにする
@@ -138,6 +144,7 @@ const store = {
     prevReleasePosition: { x: 0, y: 0 },
     isMouseUping: false,
     isIconSpread: false,
+    keydownTime: 0,
   },
   icon: {
     window: null,
@@ -159,9 +166,39 @@ const store = {
         // type: "panel",
         // focusable: false,
       });
-      this.window.loadFile('src/icon/index.html');
-      this.window.setIgnoreMouseEvents(true);
+     if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+       this.window.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+     } else {
+        this.window.loadFile(path.join(__dirname, "../renderer/icon.html"));
+     }
+      // this.window.setIgnoreMouseEvents(true);
       this.window.setAlwaysOnTop(true, "floating");
+
+      const d = new BrowserWindow({
+        width: 800, // 幅と高さを最小に設定
+        height: 800,
+        position: { x: 0, y: 0 }, // 画面の左上に表示
+        webPreferences: {
+          nodeIntegration: true,
+        },
+       // transparent: true,
+       // frame: false,
+       resizable: true,
+       // alwaysOnTop: true,
+       movable: true,
+       skipTaskbar: false,
+       hasShadow: false,
+       focusable: true,
+      });
+      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+        d.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+      } else {
+        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      }
+      //d.setIgnoreMouseEvents(true);
+      //d.setAlwaysOnTop(true, "floating");
+      d.webContents.openDevTools()
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
       // この部分は必要なアクションに合わせてカスタマイズ
@@ -178,6 +215,7 @@ const store = {
         return;
       }
       const { x, y } = screen.getCursorScreenPoint();
+      console.log("show", x, y);
       const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
       // this.window.setSize(iconSize, iconSize);
       this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
@@ -213,15 +251,44 @@ const getMacSelectedText = async () => {
   }
   return text;
 }
+function createVariableWatcher(target, variableName) {
+  return new Promise((resolve) => {
+    const handler = {
+      set(obj, prop, value) {
+        console.log(obj, prop, value);
+        if (prop === variableName) {
+          console.log("[createVariableWatcher]set", value);
+          resolve(value); // 変数が変更されたらPromiseを解決
+        }
+        obj[prop] = value;
+        return true;
+      }
+    };
+
+    new Proxy(target, handler);
+  });
+}
 
 const getSelectedTextByClipboard = async () => {
   const currentClipboardContent = clipboard.readText();
   console.log("origin clipboard text : ", currentClipboardContent);
   clipboard.clear();
-  await sleep(400)
+
+  let keydownDetecter = createVariableWatcher(store.control, "keydownTime");
+  let isKeydown = await Promise.race([sleep(400), keydownDetecter])
+  if (isKeydown) {
+    console.log("[getSelectedTextByClipboard]戻す1");
+    return "";
+  }
+  keydownDetecter = createVariableWatcher(store.control, "keydownTime");
   console.log("do copy");
   robotjs.keyToggle("c", "down", isMac ? "command" : "control");
-  await sleep(100)
+  isKeydown = await Promise.race([sleep(100), keydownDetecter])
+  if (isKeydown) {
+    clipboard.writeText(currentClipboardContent);
+    console.log("[getSelectedTextByClipboard]戻す2");
+    return "";
+  }
   robotjs.keyToggle("c", "up", isMac ? "command" : "control");
   const selectedText = clipboard.readText();
   console.log("new clipboard text : ", selectedText);
@@ -266,7 +333,7 @@ app.on("ready", async() => {
       main.init();
       icon.create();
     } catch (error) {
-      console.error("restart", error.trace)
+      console.error("restart", error.trace, error)
       store = cloneStore;
       start();
     }

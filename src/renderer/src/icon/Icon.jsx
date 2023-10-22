@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 // import { ipcRenderer } from 'electron';
-import icon from '@renderer/icon/icon.png';
+import icon from '@icon/icon.png';
 
-function App() {
+function Icon() {
   // const [isSpread, setIsSpread] = useState(false);
   useEffect(() => {
     // ipcRenderer.on('ICON_SPREAD', (event, message) => {
@@ -11,10 +11,11 @@ function App() {
   });
 
   return (
-    <div className="container m-4">
-      <img src={icon} width="20" height="20" className="m-[5px] cursor-pointer;" alt="icon"/>
+    <div className="container">
+      <h1>hogggggggggggggggggggggggg</h1>
+      <img src={icon} width="20" height="20" style="margin: 5px; cursor: pointer;" alt="icon"/>
     </div>
   );
 }
 
-export default App;
+export default Icon;
