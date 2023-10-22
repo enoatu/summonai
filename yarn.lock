@@ -481,6 +481,11 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-4.6.0.tgz#3c7c9c46e678feefe7a2e5bb609d3dbd665ffb3f"
   integrity sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==
 
+"@spaceymonk/react-radial-menu@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@spaceymonk/react-radial-menu/-/react-radial-menu-2.0.1.tgz#961b5373edcce0fb82e37c41f2914fc36cad1ab4"
+  integrity sha512-ET1nMnTl+kC1bG5vo9zdSi9aijQtvbN7skTunH0kXoZh50J5APOmI8wKQ1y97hZYogrC54O6/yed8+N1DnqeIg==
+
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/@szmarczak/http-timer/-/http-timer-4.0.6.tgz#b4a914bb62e7c272d4e5989fe4440f812ab1d807"
