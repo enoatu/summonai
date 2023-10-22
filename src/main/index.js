@@ -154,6 +154,7 @@ const store = {
         resizable: false,
         alwaysOnTop: true,
         movable: false,
+        show: false,
         // skipTaskbar: true,
         // hasShadow: false,
         // type: "panel",

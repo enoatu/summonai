@@ -15,10 +15,10 @@ function App() {
   }, [])
 
   return (
-    <div className="container">
+    <div>
       {isSpread ?
         <RadialMenu /> :
-        <img src={icon} width="20" height="20" className="m-5 cursor-pointer" alt="icon"
+        <img src={icon} width="20" height="20" className="rounded-full cursor-pointer" alt="icon"
           onClick={() => setIsSpread(!isSpread)}
         />
       }
