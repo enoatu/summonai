@@ -173,34 +173,34 @@ const store = {
      } else {
         this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
      }
+     this.window.setAlwaysOnTop(true, "floating");
      //  // this.window.setIgnoreMouseEvents(true);
-     // this.window.setAlwaysOnTop(true, "floating");
 
-      const d = new BrowserWindow({
-        width: 800, // 幅と高さを最小に設定
-        height: 800,
-        position: { x: 0, y: 0 }, // 画面の左上に表示
-        webPreferences: {
-          nodeIntegration: true,
-          preload: (path.join(__dirname, "../preload/index.js")),
-        },
-       // transparent: true,
-       // frame: false,
-       resizable: true,
-       // alwaysOnTop: true,
-       movable: true,
-       skipTaskbar: false,
-       hasShadow: false,
-       focusable: true,
-      });
-      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-        d.loadURL(process.env["ELECTRON_RENDERER_URL"]);
-      } else {
-        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      }
-     d.setAlwaysOnTop(true, "floating");
-     d.webContents.openDevTools()
+      // const d = new BrowserWindow({
+      //   width: 800, // 幅と高さを最小に設定
+      //   height: 800,
+      //   position: { x: 0, y: 0 }, // 画面の左上に表示
+      //   webPreferences: {
+      //     nodeIntegration: true,
+      //     preload: (path.join(__dirname, "../preload/index.js")),
+      //   },
+      //   // transparent: true,
+      //   // frame: false,
+      //   resizable: true,
+      //   // alwaysOnTop: true,
+      //   movable: true,
+      //   skipTaskbar: false,
+      //   hasShadow: false,
+      //   focusable: true,
+      // });
+      // //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      // if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+      //   d.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+      // } else {
+      //   d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      // }
+      // d.setAlwaysOnTop(true, "floating");
+      // d.webContents.openDevTools()
       //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
@@ -231,6 +231,7 @@ const store = {
       }
       const iconSize = 0; // アイコンのサイズ
       this.window.hide();
+      this.window.webContents.send("ICON_UNSPREAD");
       //  this.window.setSize(iconSize, iconSize);
       //  this.window.setPosition(0, 0); // 右下にアイコンを表示
     },

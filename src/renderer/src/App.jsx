@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import icon from '@renderer/icon/icon.png';
 import RadialMenu from '@renderer/icon/RadialMenu';
 
 
 function App() {
   const [isSpread, setIsSpread] = useState(false);
-  window.api.ICON_SPREAD((_event, value) => {
-    setIsSpread(true);
-  })
+  useEffect(() => {
+    window.api.ICON_SPREAD((_event, value) => {
+      setIsSpread(true);
+    })
+    window.api.ICON_UNSPREAD((_event, value) => {
+      setIsSpread(false);
+    })
+  }, [])
 
   return (
     <div className="container">

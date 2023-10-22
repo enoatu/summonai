@@ -15,6 +15,7 @@ const api = {
   start: (path) => ipcRenderer.invoke("Localization:start", path),
   logging: (callback) => ipcRenderer.on("Localization:logging", callback),
   ICON_SPREAD: (callback) => ipcRenderer.on("ICON_SPREAD", callback),
+  ICON_UNSPREAD: (callback) => ipcRenderer.on("ICON_UNSPREAD", callback),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to
