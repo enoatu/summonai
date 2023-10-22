@@ -19,6 +19,7 @@ const store = {
     init: function() {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
+        console.log('[mousedown]')
         const { control } = store;
         if (e.button === 1) {
           control.prevPressTime = (new Date()).getTime();
@@ -49,16 +50,9 @@ const store = {
           store.icon.window.setPosition(newPos.x, newPos.y);
           return
         }
-        if (!control.isMouseUping) {
-          await store.icon.hide();
-        }
       });
       uIOhook.on("mouseup", async (e) => {
         const { control } = store;
-        if (control.isMouseUping) {
-          return;
-        }
-        control.isMouseUping = true;
         if (e.button === 1) {
           const { x, y } = e;
           const currentReleaseTime = (new Date()).getTime();
@@ -93,7 +87,6 @@ const store = {
             }
           }
         }
-        control.isMouseUping = false;
       });
       uIOhook.on("click", async (e) => {
         const { control } = store;
@@ -111,7 +104,6 @@ const store = {
             }
             await store.icon.hide();
             console.log("[click]hide icon");
-          // }
           } else {
             // 展開中
             if (statusX > -ICON_SPREAD_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SPREAD_SIZE.HEIGHT && statusY < 0) {
@@ -143,7 +135,6 @@ const store = {
     prevPressTime: 0,
     prevReleaseTime: 0,
     prevReleasePosition: { x: 0, y: 0 },
-    isMouseUping: false,
     isIconSpread: false,
     keydownTime: 0,
   },
@@ -168,12 +159,12 @@ const store = {
         // type: "panel",
         focusable: true,
       });
-     if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-       this.window.loadURL(process.env["ELECTRON_RENDERER_URL"]);
-     } else {
+      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+        this.window.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+      } else {
         this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
-     }
-     this.window.setAlwaysOnTop(true, "floating");
+      }
+      this.window.setAlwaysOnTop(true, "floating");
      //  // this.window.setIgnoreMouseEvents(true);
 
       // const d = new BrowserWindow({
@@ -214,9 +205,6 @@ const store = {
       // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
     },
     show: async function() {
-      if (this.window.isVisible()) {
-        return;
-      }
       const { x, y } = screen.getCursorScreenPoint();
       console.log("show", x, y);
       const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
