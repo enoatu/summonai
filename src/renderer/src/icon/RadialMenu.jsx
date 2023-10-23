@@ -4,6 +4,7 @@ import { Menu, MenuItem, SubMenu } from "@spaceymonk/react-radial-menu";
 function RadialMenu({ text }) {
   const [show, setShow] = React.useState(true);
   const [position, setPosition] = React.useState({ x: 150, y: 150 });
+  const [hover, setHover] = React.useState(0);
 
   // You can also use separate handler for each item
   const handleItemClick = (event, index, data) => {
@@ -20,8 +21,16 @@ function RadialMenu({ text }) {
 
   const b1 = 'どういう意味?';
   const b2 = '日本語訳して';
-  const b3 = 'ビジネスライクな正しい文章にして';
+  const b3 = 'ビジネスライクな正しい文章にして。かつ、「。」で必ず改行し、ですます調とすること！';
   const b4 = 'これに対して何をすればいい?';
+  const candidates = [b1, b2, b3, b4];
+
+  // ホバーするとその内容が表示される(文字が外に出る) tailwindcss absolute 使用
+  const TextWrapper = ({ hover, children }) => {
+    return (
+      <span className="text-[8.5px] w-full h-full text-ellipsis">{children}</span>
+    );
+  }
 
   return (
     <div
@@ -36,6 +45,7 @@ function RadialMenu({ text }) {
       }}
       // onClick={() => setShow(false)}
       style={{ width: "100vw", height: "100vh" }}
+      className="relative"
     >
       <Menu
         centerX={position.x}
@@ -47,8 +57,11 @@ function RadialMenu({ text }) {
         animationTimeout={150}
       >
         {/* Populate your menu here */}
-        <MenuItem onItemClick={handleItemClick} data={b1}>
-          {b1}
+        <MenuItem
+          onMouseEnter={() => setHover(1)}
+          onMouseLeave={() => setHover(0)}
+          onItemClick={handleItemClick} data={b1}>
+          <TextWrapper hover={hover === 1}>{b1}</TextWrapper>
         </MenuItem>
         <SubMenu
           onDisplayClick={handleDisplayClick}
@@ -56,22 +69,33 @@ function RadialMenu({ text }) {
           itemView="もっと見る"
           data=""
           displayPosition="bottom"
+          className="text-[8.5px] w-full h-full text-ellipsis"
         >
-          <MenuItem onItemClick={handleItemClick} data={b2}>
-            {b2}
+          <MenuItem
+            onMouseEnter={() => setHover(2)}
+            onMouseLeave={() => setHover(0)}
+            onItemClick={handleItemClick} data={b2}>
+            <TextWrapper hover={hover===2}>{b2}</TextWrapper>
           </MenuItem>
-          <MenuItem onItemClick={handleItemClick} data={b3}>
-            {b3}
+          <MenuItem
+            onMouseEnter={() => setHover(3)}
+            onMouseLeave={() => setHover(0)}
+            onItemClick={handleItemClick} data={b3}>
+            <TextWrapper hover={hover===3}>{b3}</TextWrapper>
           </MenuItem>
-          <MenuItem onItemClick={handleItemClick} data={b4}>
-            {b4}
+          <MenuItem
+            onMouseEnter={() => setHover(4)}
+            onMouseLeave={() => setHover(0)}
+            onItemClick={handleItemClick} data={b4}>
+            <TextWrapper hover={hover===4}>{b4}</TextWrapper>
           </MenuItem>
           <SubMenu
             onDisplayClick={handleDisplayClick}
             onItemClick={handleSubMenuClick}
-            itemView="2.4. Sub Menu"
+            itemView="+"
             data="2.4. Sub Menu"
             displayPosition="bottom"
+            className="text-[8.5px] w-full h-full text-ellipsis"
           >
             <MenuItem onItemClick={handleItemClick} data="2.4.1. Item">
               2.4.1. Item
@@ -82,6 +106,9 @@ function RadialMenu({ text }) {
           </SubMenu>
         </SubMenu>
       </Menu>
+      {show && <div className="absolute flex justify-center top-[93px] left-[93px] items-center w-auto h-[100px] z-[50000]">
+        {hover !== 0 && <div className="bg-gray-100 rounded-lg text-sm p-2">{candidates[hover-1]}</div>}
+      </div>}
     </div>
   );
 }

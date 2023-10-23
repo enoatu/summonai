@@ -98,16 +98,6 @@ const store = {
           }
         }
       });
-      // uIOhook.on("click", async (e) => {
-      //   const { control } = store;
-      //   const diffTime = Math.abs(control.iconClickTime - (new Date()).getTime());
-      //   if (diffTime < 100) {
-      //     console.log("[click]click!!!!!!!!!", diffTime, control.iconClickTime, (new Date()).getTime())
-      //   } else {
-      //     console.log("[click]not click!!!!!!!!!", diffTime, control.iconClickTime, (new Date()).getTime());
-      //     await store.icon.hide();
-      //   }
-      // });
       uIOhook.on("wheel", async () => {
       });
       uIOhook.on("keyup", async (e) => {
