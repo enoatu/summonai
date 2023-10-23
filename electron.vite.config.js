@@ -19,6 +19,14 @@ export default defineConfig({
         "@": resolve("src"),
         "@common": resolve("src/common")
       }
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          browser: resolve(__dirname, 'src/preload/browser.js'),
+          icon: resolve(__dirname, 'src/preload/icon.js')
+        }
+      }
     }
   },
   renderer: {
@@ -30,5 +38,13 @@ export default defineConfig({
         "@renderer": resolve("src/renderer/src")
       }
     },
+    build: {
+      rollupOptions: {
+        input: {
+          browser: resolve(__dirname, 'src/renderer/browser.html'),
+          icon: resolve(__dirname, 'src/renderer/icon.html')
+        }
+      }
+    }
   }
 });

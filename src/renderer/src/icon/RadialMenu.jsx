@@ -1,7 +1,7 @@
 import React from "react";
 import { Menu, MenuItem, SubMenu } from "@spaceymonk/react-radial-menu";
 
-function App() {
+function RadialMenu({ text }) {
   const [show, setShow] = React.useState(true);
   const [position, setPosition] = React.useState({ x: 150, y: 150 });
 
@@ -9,6 +9,7 @@ function App() {
   const handleItemClick = (event, index, data) => {
     console.log(`[MenuItem] ${data} clicked`);
     // setShow(false); // you should handle your menu visibility yourself
+    alert(`[MenuItem] ${data} clicked`);
   };
   const handleSubMenuClick = (event, index, data) => {
     console.log(`[SubMenu] ${data} clicked`);
@@ -41,8 +42,8 @@ function App() {
         animationTimeout={150}
       >
         {/* Populate your menu here */}
-        <MenuItem onItemClick={handleItemClick} data="1. Item">
-          1. Item
+        <MenuItem onItemClick={handleItemClick} data={text}>
+          {text}
         </MenuItem>
         <SubMenu
           onDisplayClick={handleDisplayClick}
@@ -80,4 +81,4 @@ function App() {
   );
 }
 
-export default App;
+export default RadialMenu;

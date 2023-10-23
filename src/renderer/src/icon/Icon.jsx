@@ -1,19 +1,31 @@
 import React, { useEffect, useState } from 'react';
-// import { ipcRenderer } from 'electron';
-import icon from '@icon/icon.png';
+import icon from '@renderer/icon/icon.png';
+import RadialMenu from '@renderer/icon/RadialMenu';
 
 function Icon() {
-  // const [isSpread, setIsSpread] = useState(false);
+  const [isSpread, setIsSpread] = useState(false);
+  const [text, setText] = useState('ss');
   useEffect(() => {
-    // ipcRenderer.on('ICON_SPREAD', (event, message) => {
-    //   setIsSpread(message);
-    // });
-  });
+    window.api.ICON_SPREAD(() => {
+      setIsSpread(true);
+    })
+    window.api.ICON_SET_TEXT((_event, text) => {
+      console.log(text);
+      setText(text);
+    })
+    window.api.ICON_UNSPREAD(() => {
+      setIsSpread(false);
+    })
+  }, [])
 
   return (
-    <div className="container">
-      <h1>hogggggggggggggggggggggggg</h1>
-      <img src={icon} width="20" height="20" style="margin: 5px; cursor: pointer;" alt="icon"/>
+    <div onMouseDown={() => window.api.ICON_CLICK()}>
+      {isSpread ?
+        <RadialMenu text={text}/> :
+        <img src={icon} width="20" height="20" className="rounded-full cursor-pointer" alt="icon"
+          onClick={() => setIsSpread(!isSpread)}
+        />
+      }
     </div>
   );
 }

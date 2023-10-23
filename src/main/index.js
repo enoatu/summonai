@@ -11,6 +11,10 @@ import { getSelection } from 'node-selection';
 // docker
 // vscode
 // chrome devtool
+//
+// ## issue
+// ctrl + c でコピーできない
+// アイコン右下らへんクリックでアイコンが消えない
 
 const ICON_SIZE = {
   WIDTH: 30,
@@ -27,39 +31,31 @@ const store = {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
         console.log('[mousedown]')
-        const { control, watchControl } = store;
-        watchControl.keydownTime = (new Date()).getTime();
+        const now = (new Date()).getTime()
+        let diffTime = now - store.watchIcon.rendererClickTime;
+        if (diffTime < 200) {
+          console.log('内部クリック1')
+          // |renderer     |now
+          // -------------100ms
+        } else {
+          // |renderer     |now         |renderer
+          // -------------100ms--------100ms
+          sleep(200).then(() => {
+            diffTime = store.watchIcon.rendererClickTime - now;
+            console.log("[diffTime]", diffTime);
+            if (diffTime > 0 && diffTime < 200) {
+              console.log('内部クリック2')
+            } else {
+              console.log('外部クリック')
+              console.log('hide!!!!!!!!!!!!')
+              store.icon.hide();
+            }
+          });
+        }
 
-        console.log("[click]", watchControl.keydownTime);
-
+        const { control } = store;
         if (e.button === 1) {
           control.prevPressTime = (new Date()).getTime();
-        }
-        const [winX, winY] = store.icon.window.getPosition();
-        // カーソルの位置を取得
-        const { x, y } = screen.getCursorScreenPoint();
-        const statusX = winX - x;
-        const statusY = winY - y;
-        if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
-          console.log("[mousedown]icon click!!!!!!!!!");
-          control.isIconSpread = true;
-          store.icon.window.webContents.send("ICON_SPREAD");
-          store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
-          const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH/2, y: winY - ICON_SPREAD_SIZE.HEIGHT/2};
-          if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
-            newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
-          }
-          if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
-            newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
-          }
-          if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
-            newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
-          }
-          if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
-            newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
-          }
-          store.icon.window.setPosition(newPos.x, newPos.y);
-          return
         }
       });
       uIOhook.on("mouseup", async (e) => {
@@ -71,63 +67,54 @@ const store = {
           const prevReleaseX = control.prevReleasePosition.x;
           const prevReleaseY = control.prevReleasePosition.y;
           control.prevReleasePosition = { x, y };
+          console.log("[mouseup]", x, y, prevReleaseX, prevReleaseY);
           const mouseDistance = Math.sqrt(Math.pow(x - prevReleaseX, 2) + Math.pow(y - prevReleaseY, 2));
 
           let previousReleaseTime = control.prevReleaseTime;
           let previousPressTime = control.prevPressTime;
           control.prevReleaseTime = currentReleaseTime;
 
-          const isPressed = previousReleaseTime < previousPressTime;
-          const pressedTime = currentReleaseTime - previousPressTime;
-          const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
-          let isSelectedEvent = false;
-          if (isPressed && pressedTime > 100 && mouseDistance > 20) {
-            console.log("[mouseup]long press");
-            isSelectedEvent = true;
-          }
-          if (previousReleaseTime !== 0 && isDoubleClick) {
-            console.log("[mouseup]double click");
-            isSelectedEvent = true;
-          }
-          if (isSelectedEvent) {
-            console.log("[mouseup]selected event");
-            const text = await getMacSelectedText()
-            if (text) {
-              console.log("[mouseup]text", text);
-              await store.icon.show();
+          if (!store.icon.window.isVisible()) {
+            const isPressed = previousReleaseTime < previousPressTime;
+            const pressedTime = currentReleaseTime - previousPressTime;
+            const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
+            let isSelectedEvent = false;
+            if (isPressed && pressedTime > 100 && mouseDistance > 20) {
+              console.log("[mouseup]long press");
+              isSelectedEvent = true;
+            }
+            if (previousReleaseTime !== 0 && isDoubleClick) {
+              console.log("[mouseup]double click");
+              isSelectedEvent = true;
+            }
+            if (isSelectedEvent) {
+              console.log("[mouseup]selected event");
+              const text = await getMacSelectedText()
+              if (text) {
+                console.log("[mouseup]text", text);
+                await store.icon.show(text);
+              }
             }
           }
         }
       });
-      uIOhook.on("click", async (e) => {
-        const { control } = store;
-        console.log("[click]click", e.clicks);
-        const [winX, winY] = store.icon.window.getPosition();
-        // カーソルの位置を取得
-        const { x, y } = screen.getCursorScreenPoint();
-        const statusX = winX - x;
-        const statusY = winY - y;
-        if (!control.isIconSpread) {
-          if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
-            console.log("[click]click!!!!!!!!!");
-            return;
-          }
-          await store.icon.hide();
-          console.log("[click]hide icon");
-        } else {
-          // 展開中
-          if (statusX > -ICON_SPREAD_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SPREAD_SIZE.HEIGHT && statusY < 0) {
-            return;
-          }
-          await store.icon.hide();
-          console.log("[click]hide icon");
-        }
-      });
+      // uIOhook.on("click", async (e) => {
+      //   const { control } = store;
+      //   const diffTime = Math.abs(control.iconClickTime - (new Date()).getTime());
+      //   if (diffTime < 100) {
+      //     console.log("[click]click!!!!!!!!!", diffTime, control.iconClickTime, (new Date()).getTime())
+      //   } else {
+      //     console.log("[click]not click!!!!!!!!!", diffTime, control.iconClickTime, (new Date()).getTime());
+      //     await store.icon.hide();
+      //   }
+      // });
       uIOhook.on("wheel", async () => {
       });
       uIOhook.on("keyup", async (e) => {
       });
       uIOhook.on("keydown", async (e) => {
+        // copy時にrobotjsで押下していることに注意
+        console.log("[keydown]", e.keycode);
       });
       uIOhook.start();
 
@@ -140,9 +127,40 @@ const store = {
     prevReleaseTime: 0,
     prevReleasePosition: { x: 0, y: 0 },
     isIconSpread: false,
+    iconClickTime: 0,
+    isFirstSpread: false,
   },
   watchControl: {
     keydownTime: 0,
+  },
+  watchIcon: {
+    rendererClickTime: 0,
+    mainClickTime: 0,
+  },
+  browser: {
+    window: null,
+    create: function() {
+      this.window = new BrowserWindow({
+        width: 500,
+        height: screen.getPrimaryDisplay().size.height,
+        // 画面の右上に表示
+        position: { x: screen.getPrimaryDisplay().size.width - 500, y: 0},
+        webPreferences: {
+          nodeIntegration: true,
+          preload: (path.join(__dirname, "../preload/browser.js")),
+        },
+        transparent: true,
+        frame: false,
+        resizable: false,
+        alwaysOnTop: true,
+        movable: false,
+        show: false,
+        // skipTaskbar: true,
+        // hasShadow: false,
+        // type: "panel",
+        focusable: true,
+      });
+    },
   },
   icon: {
     window: null,
@@ -153,7 +171,7 @@ const store = {
         position: { x: 0, y: 0 }, // 画面の左上に表示
         webPreferences: {
           nodeIntegration: true,
-          preload: (path.join(__dirname, "../preload/index.js")),
+          preload: (path.join(__dirname, "../preload/icon.js")),
         },
         transparent: true,
         frame: false,
@@ -167,38 +185,39 @@ const store = {
         focusable: true,
       });
       if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-        this.window.loadURL(process.env["ELECTRON_RENDERER_URL"]);
+        this.window.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
       } else {
-        this.window.loadFile(path.join(__dirname, "../renderer/index.html"));
+        this.window.loadFile(path.join(__dirname, "../renderer/icon.html"));
       }
-      this.window.setAlwaysOnTop(true, "floating");
+      // this.window.setAlwaysOnTop(true, "floating");
      //  // this.window.setIgnoreMouseEvents(true);
 
-      // const d = new BrowserWindow({
-      //   width: 800, // 幅と高さを最小に設定
-      //   height: 800,
-      //   position: { x: 0, y: 0 }, // 画面の左上に表示
-      //   webPreferences: {
-      //     nodeIntegration: true,
-      //     preload: (path.join(__dirname, "../preload/index.js")),
-      //   },
-      //   // transparent: true,
-      //   // frame: false,
-      //   resizable: true,
-      //   // alwaysOnTop: true,
-      //   movable: true,
-      //   skipTaskbar: false,
-      //   hasShadow: false,
-      //   focusable: true,
-      // });
-      // //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      // if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-      //   d.loadURL(process.env["ELECTRON_RENDERER_URL"]);
-      // } else {
-      //   d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      // }
-      // d.setAlwaysOnTop(true, "floating");
-      // d.webContents.openDevTools()
+      const d = new BrowserWindow({
+        width: 800, // 幅と高さを最小に設定
+        height: 800,
+        position: { x: 0, y: 0 }, // 画面の左上に表示
+        webPreferences: {
+          nodeIntegration: true,
+          preload: (path.join(__dirname, "../preload/icon.js")),
+        },
+        // transparent: true,
+        // frame: false,
+        resizable: true,
+        // alwaysOnTop: true,
+        movable: true,
+        skipTaskbar: false,
+        hasShadow: false,
+        focusable: true,
+        title: "icon",
+      });
+      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+        d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
+      } else {
+        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      }
+      d.setAlwaysOnTop(true, "floating");
+      d.webContents.openDevTools()
       //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
@@ -211,11 +230,12 @@ const store = {
       // clickで消える
       // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
     },
-    show: async function() {
+    show: async function(text) {
       const { x, y } = store.control.prevReleasePosition;
       console.log("show", x, y);
       const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
       // this.window.setSize(iconSize, iconSize);
+      this.window.webContents.send("ICON_SET_TEXT", text);
       this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
       this.window.setVisibleOnAllWorkspaces(true);
       this.window.showInactive();
@@ -224,15 +244,20 @@ const store = {
       if (!this.window.isVisible()) {
         return;
       }
-      const iconSize = 0; // アイコンのサイズ
+      console.log("hide");
       this.window.hide();
       this.window.webContents.send("ICON_UNSPREAD");
-      //  this.window.setSize(iconSize, iconSize);
-      //  this.window.setPosition(0, 0); // 右下にアイコンを表示
     },
   }
 }
 const cloneStore = JSON.parse(JSON.stringify(store));
+
+
+const recordKeydownTime = () => {
+  const { watchControl, watchIcon } = store;
+  watchControl.keydownTime = (new Date()).getTime();
+  watchIcon.mainClickTime = watchControl.keydownTime;
+}
 
 const getMacSelectedText = async () => {
   let text = "";
@@ -275,7 +300,6 @@ function createVariableWatcher(variableName) {
 const getSelectedTextByClipboard = async () => {
   const currentClipboardContent = clipboard.readText();
   console.log("origin clipboard text : ", currentClipboardContent);
-  clipboard.clear();
 
   let keydownDetecter = createVariableWatcher("keydownTime");
   let isKeydown = await Promise.race([sleep(400), keydownDetecter])
@@ -285,9 +309,11 @@ const getSelectedTextByClipboard = async () => {
   }
   keydownDetecter = createVariableWatcher("keydownTime");
   console.log("do copy");
+  // clipboard.clear();
   robotjs.keyToggle("c", "down", isMac ? "command" : "control");
-  isKeydown = await Promise.race([sleep(100), keydownDetecter])
+  isKeydown = await Promise.race([sleep(50), keydownDetecter])
   if (isKeydown) {
+    console.log(isKeydown);
     clipboard.writeText(currentClipboardContent);
     console.log("[getSelectedTextByClipboard]戻す2");
     return "";
@@ -342,10 +368,75 @@ app.on("ready", async() => {
   }
   start();
 });
+
+function createWatcher() {
+  store.watchIcon = cloneStore.watchIcon
+  console.log("[createWatcher]start");
+  const handler = {
+    async set(obj, prop, value) {
+      console.log("[createWatcher]watch", prop)
+      obj[prop] = value;
+
+      // 全体のクリックした時の時間と、アイコンをクリックした時の時間を記録しておき、
+      // アイコンをクリックした際は、window内部のクリック確実となるため、比較する必要がない
+      if (prop === 'mainClickTime') {
+        sleep(100).then(() => {
+          const diffTime = Math.abs(obj.rendererClickTime - (new Date()).getTime());
+          console.log("[createWatcher]set", obj.rendererClickTime, obj.mainClickTime, diffTime);
+          if (diffTime != 0 && diffTime > 200 && diffTime < 10000000) {
+            console.log('hide!!!!!!!!!!!!')
+            store.icon.hide();
+          }
+        });
+      }
+      return true;
+    }
+  };
+
+  store.watchIcon = new Proxy(store.watchIcon, handler);
+}
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId("com.enoatu");
   // createWindow();
+  // createWatcher();
+  ipcMain.handle('ICON_CLICK', async (event, arg) => {
+    console.log('ICON_CLICK!!!!!!!!', arg);
+    const { control, watchIcon } = store;
+    control.iconClickTime = (new Date()).getTime();
+    watchIcon.rendererClickTime = control.iconClickTime;
+
+    if (store.icon.window.isVisible() && !control.isIconSpread) {// アイコン状態の時
+      console.log('spread展開')
+      const [winX, winY] = store.icon.window.getPosition();
+      const { x, y } = screen.getCursorScreenPoint();
+      console.log(x, y)
+      console.log("[mousedown]icon click!!!!!!!!!");
+      control.isIconSpread = true;
+      store.icon.window.webContents.send("ICON_SPREAD");
+      await sleep(100);
+      store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
+      // const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH, y: winY - ICON_SPREAD_SIZE.HEIGHT};
+      //if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
+      //  console.log(1)
+      //  newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
+      //}
+      //if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
+      //  console.log(2)
+      //  newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
+      //}
+      //if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
+      //  console.log(3)
+      //  newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
+      //}
+      //if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
+      //  console.log(4)
+      //  newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
+      //}
+      store.icon.window.setPosition(screen.getPrimaryDisplay().size.width, screen.getPrimaryDisplay().size.height);
+      // store.icon.window.setPosition(newPos.x, newPos.y);
+    }
+  })
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -362,6 +453,10 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+app.on("focus", async () => {
+  console.log("focus");
 });
 // destractor
 app.on("will-quit", async () => {
