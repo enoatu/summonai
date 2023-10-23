@@ -21,7 +21,7 @@ function RadialMenu({ text }) {
 
   const b1 = 'どういう意味?';
   const b2 = '日本語訳して';
-  const b3 = 'ビジネスライクな正しい文章にして。かつ、「。」で必ず改行し、ですます調とすること！';
+  const b3 = 'ビジネスライクな正しい文章にして。かつ、「。」で必ず改行すること';
   const b4 = 'これに対して何をすればいい?';
   const candidates = [b1, b2, b3, b4];
 
