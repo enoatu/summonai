@@ -5,6 +5,13 @@ import robotjs from '@jitsi/robotjs';
 import { sleep, isMac } from "@/utils";
 import path from "path";
 import { getSelection } from 'node-selection';
+// 検証用
+// growi edit
+// growi preview
+// docker
+// vscode
+// chrome devtool
+
 const ICON_SIZE = {
   WIDTH: 30,
   HEIGHT: 30,
@@ -20,7 +27,11 @@ const store = {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
         console.log('[mousedown]')
-        const { control } = store;
+        const { control, watchControl } = store;
+        watchControl.keydownTime = (new Date()).getTime();
+
+        console.log("[click]", watchControl.keydownTime);
+
         if (e.button === 1) {
           control.prevPressTime = (new Date()).getTime();
         }
@@ -91,39 +102,32 @@ const store = {
       uIOhook.on("click", async (e) => {
         const { control } = store;
         console.log("[click]click", e.clicks);
-        if (store.icon.window.isVisible()) {
-          const [winX, winY] = store.icon.window.getPosition();
-          // カーソルの位置を取得
-          const { x, y } = screen.getCursorScreenPoint();
-          const statusX = winX - x;
-          const statusY = winY - y;
-          if (!control.isIconSpread) {
-            if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
-              console.log("[click]click!!!!!!!!!");
-              return;
-            }
-            await store.icon.hide();
-            console.log("[click]hide icon");
-          } else {
-            // 展開中
-            if (statusX > -ICON_SPREAD_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SPREAD_SIZE.HEIGHT && statusY < 0) {
-              return;
-            }
-            await store.icon.hide();
-            console.log("[click]hide icon");
+        const [winX, winY] = store.icon.window.getPosition();
+        // カーソルの位置を取得
+        const { x, y } = screen.getCursorScreenPoint();
+        const statusX = winX - x;
+        const statusY = winY - y;
+        if (!control.isIconSpread) {
+          if (statusX > -ICON_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SIZE.HEIGHT && statusY < 0) {
+            console.log("[click]click!!!!!!!!!");
+            return;
           }
+          await store.icon.hide();
+          console.log("[click]hide icon");
+        } else {
+          // 展開中
+          if (statusX > -ICON_SPREAD_SIZE.WIDTH && statusX < 0 && statusY > -ICON_SPREAD_SIZE.HEIGHT && statusY < 0) {
+            return;
+          }
+          await store.icon.hide();
+          console.log("[click]hide icon");
         }
       });
       uIOhook.on("wheel", async () => {
-          // store.icon.hide();
-          // console.log("wheel => hide");
       });
       uIOhook.on("keyup", async (e) => {
       });
       uIOhook.on("keydown", async (e) => {
-        const { control } = store;
-        control.keydownTime = (new Date()).getTime();
-        console.log("[keydown]", control.keydownTime);
       });
       uIOhook.start();
 
@@ -136,6 +140,8 @@ const store = {
     prevReleaseTime: 0,
     prevReleasePosition: { x: 0, y: 0 },
     isIconSpread: false,
+  },
+  watchControl: {
     keydownTime: 0,
   },
   icon: {
@@ -206,7 +212,7 @@ const store = {
       // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
     },
     show: async function() {
-      const { x, y } = screen.getCursorScreenPoint();
+      const { x, y } = store.control.prevReleasePosition;
       console.log("show", x, y);
       const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
       // this.window.setSize(iconSize, iconSize);
@@ -244,21 +250,25 @@ const getMacSelectedText = async () => {
   }
   return text;
 }
-function createVariableWatcher(target, variableName) {
+function createVariableWatcher(variableName) {
+  store.watchControl = cloneStore.watchControl;
   return new Promise((resolve) => {
+    console.log("[createVariableWatcher]start");
     const handler = {
       set(obj, prop, value) {
+      console.log("[createVariableWatcher]handler")
         console.log(obj, prop, value);
         if (prop === variableName) {
           console.log("[createVariableWatcher]set", value);
           resolve(value); // 変数が変更されたらPromiseを解決
+          store.watchControl = cloneStore.watchControl;
         }
         obj[prop] = value;
         return true;
       }
     };
 
-    new Proxy(target, handler);
+    store.watchControl = new Proxy(store.watchControl, handler);
   });
 }
 
@@ -267,13 +277,13 @@ const getSelectedTextByClipboard = async () => {
   console.log("origin clipboard text : ", currentClipboardContent);
   clipboard.clear();
 
-  let keydownDetecter = createVariableWatcher(store.control, "keydownTime");
+  let keydownDetecter = createVariableWatcher("keydownTime");
   let isKeydown = await Promise.race([sleep(400), keydownDetecter])
   if (isKeydown) {
     console.log("[getSelectedTextByClipboard]戻す1");
     return "";
   }
-  keydownDetecter = createVariableWatcher(store.control, "keydownTime");
+  keydownDetecter = createVariableWatcher("keydownTime");
   console.log("do copy");
   robotjs.keyToggle("c", "down", isMac ? "command" : "control");
   isKeydown = await Promise.race([sleep(100), keydownDetecter])
@@ -318,7 +328,6 @@ const releaseKeysForShortSelect = () => {
   uIOhook.keyToggle(UiohookKey.Escape, "up");
 }
 
-// 文字列をクリップボードにコピーする
 app.on("ready", async() => {
   const start = () => {
     const { main, icon } = store;
