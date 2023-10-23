@@ -8,8 +8,8 @@ function RadialMenu({ text }) {
   // You can also use separate handler for each item
   const handleItemClick = (event, index, data) => {
     console.log(`[MenuItem] ${data} clicked`);
-    // setShow(false); // you should handle your menu visibility yourself
-    alert(`[MenuItem] ${data} clicked`);
+    window.api.ICON_BUTTON_CLICK({text, data});
+    setShow(false); // you should handle your menu visibility yourself
   };
   const handleSubMenuClick = (event, index, data) => {
     console.log(`[SubMenu] ${data} clicked`);
@@ -17,6 +17,11 @@ function RadialMenu({ text }) {
   const handleDisplayClick = (event, position) => {
     console.log(`[Display] ${position} clicked`);
   };
+
+  const b1 = 'どういう意味?';
+  const b2 = '日本語訳して';
+  const b3 = 'ビジネスライクな正しい文章にして';
+  const b4 = 'これに対して何をすればいい?';
 
   return (
     <div
@@ -42,24 +47,24 @@ function RadialMenu({ text }) {
         animationTimeout={150}
       >
         {/* Populate your menu here */}
-        <MenuItem onItemClick={handleItemClick} data={text}>
-          {text}
+        <MenuItem onItemClick={handleItemClick} data={b1}>
+          {b1}
         </MenuItem>
         <SubMenu
           onDisplayClick={handleDisplayClick}
           onItemClick={handleSubMenuClick}
-          itemView="2. Sub Menu"
-          data="2. Sub Menu"
+          itemView="もっと見る"
+          data=""
           displayPosition="bottom"
         >
-          <MenuItem onItemClick={handleItemClick} data="2.1. Item">
-            2.1. Item
+          <MenuItem onItemClick={handleItemClick} data={b2}>
+            {b2}
           </MenuItem>
-          <MenuItem onItemClick={handleItemClick} data="2.2. Item">
-            2.2. Item
+          <MenuItem onItemClick={handleItemClick} data={b3}>
+            {b3}
           </MenuItem>
-          <MenuItem onItemClick={handleItemClick} data="2.3. Item">
-            2.3. Item
+          <MenuItem onItemClick={handleItemClick} data={b4}>
+            {b4}
           </MenuItem>
           <SubMenu
             onDisplayClick={handleDisplayClick}

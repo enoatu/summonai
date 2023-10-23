@@ -18,6 +18,7 @@ const api = {
   ICON_UNSPREAD: (callback) => ipcRenderer.on("ICON_UNSPREAD", callback),
   ICON_SET_TEXT: (callback) => ipcRenderer.on("ICON_SET_TEXT", callback),
   ICON_CLICK: (callback) => ipcRenderer.invoke("ICON_CLICK", callback),
+  ICON_BUTTON_CLICK: (callback) => ipcRenderer.invoke("ICON_BUTTON_CLICK", callback),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

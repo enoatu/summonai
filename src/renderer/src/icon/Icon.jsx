@@ -4,13 +4,12 @@ import RadialMenu from '@renderer/icon/RadialMenu';
 
 function Icon() {
   const [isSpread, setIsSpread] = useState(false);
-  const [text, setText] = useState('ss');
+  const [text, setText] = useState('');
   useEffect(() => {
     window.api.ICON_SPREAD(() => {
       setIsSpread(true);
     })
     window.api.ICON_SET_TEXT((_event, text) => {
-      console.log(text);
       setText(text);
     })
     window.api.ICON_UNSPREAD(() => {

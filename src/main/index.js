@@ -155,13 +155,9 @@ const store = {
         alwaysOnTop: false,
         movable: true,
         show: true,
-        // skipTaskbar: true,
-        // hasShadow: false,
-        // type: "panel",
         focusable: true,
       });
       this.window.loadURL('https://chat.openai.com/?model=text-davinci-002-render-sha');
-
 
       this.window.on('ready-to-show', async () => {
         await this.window.webContents.executeJavaScript(`
@@ -215,7 +211,6 @@ const store = {
       this.window = new BrowserWindow({
         width: ICON_SIZE.WIDTH, // 幅と高さを最小に設定
         height: ICON_SIZE.HEIGHT,
-        position: { x: 0, y: 0 }, // 画面の左上に表示
         webPreferences: {
           nodeIntegration: true,
           preload: (path.join(__dirname, "../preload/icon.js")),
@@ -236,35 +231,34 @@ const store = {
       } else {
         this.window.loadFile(path.join(__dirname, "../renderer/icon.html"));
       }
-      // this.window.setAlwaysOnTop(true, "floating");
-     //  // this.window.setIgnoreMouseEvents(true);
+      this.window.setAlwaysOnTop(true, "floating");
 
-      // const d = new BrowserWindow({
-      //   width: 800, // 幅と高さを最小に設定
-      //   height: 800,
-      //   position: { x: 0, y: 0 }, // 画面の左上に表示
-      //   webPreferences: {
-      //     nodeIntegration: true,
-      //     preload: (path.join(__dirname, "../preload/icon.js")),
-      //   },
-      //   // transparent: true,
-      //   // frame: false,
-      //   resizable: true,
-      //   // alwaysOnTop: true,
-      //   movable: true,
-      //   skipTaskbar: false,
-      //   hasShadow: false,
-      //   focusable: true,
-      //   title: "icon",
-      // });
-      // //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      // if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-      //   d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
-      // } else {
-      //   d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      // }
-      // d.setAlwaysOnTop(true, "floating");
-      // d.webContents.openDevTools()
+      const d = new BrowserWindow({
+        width: 800, // 幅と高さを最小に設定
+        height: 800,
+        position: { x: 0, y: 0 }, // 画面の左上に表示
+        webPreferences: {
+          nodeIntegration: true,
+          preload: (path.join(__dirname, "../preload/icon.js")),
+        },
+        // transparent: true,
+        // frame: false,
+        resizable: true,
+        // alwaysOnTop: true,
+        movable: true,
+        skipTaskbar: false,
+        hasShadow: false,
+        focusable: true,
+        title: "icon",
+      });
+      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+        d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
+      } else {
+        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      }
+      d.setAlwaysOnTop(true, "floating");
+      d.webContents.openDevTools()
       //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
@@ -298,13 +292,6 @@ const store = {
   }
 }
 const cloneStore = JSON.parse(JSON.stringify(store));
-
-
-const recordKeydownTime = () => {
-  const { watchControl, watchIcon } = store;
-  watchControl.keydownTime = (new Date()).getTime();
-  watchIcon.mainClickTime = watchControl.keydownTime;
-}
 
 const getMacSelectedText = async () => {
   let text = "";
@@ -464,27 +451,58 @@ app.whenReady().then(() => {
       store.icon.window.webContents.send("ICON_SPREAD");
       await sleep(100);
       store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
-      // const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH, y: winY - ICON_SPREAD_SIZE.HEIGHT};
-      //if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
-      //  console.log(1)
-      //  newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
-      //}
-      //if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
-      //  console.log(2)
-      //  newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
-      //}
-      //if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
-      //  console.log(3)
-      //  newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
-      //}
-      //if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
-      //  console.log(4)
-      //  newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
-      //}
-      store.icon.window.setPosition(screen.getPrimaryDisplay().size.width, screen.getPrimaryDisplay().size.height);
-      // store.icon.window.setPosition(newPos.x, newPos.y);
+      const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH, y: winY - ICON_SPREAD_SIZE.HEIGHT};
+      if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
+        console.log(1)
+        newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
+      }
+      if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
+        console.log(2)
+        newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
+      }
+      if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
+        console.log(3)
+        newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
+      }
+      if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
+        console.log(4)
+        newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
+      }
+      store.icon.window.setPosition(newPos.x, newPos.y);
     }
   })
+  ipcMain.handle('ICON_BUTTON_CLICK', async (event, {text, data:userText}) => {
+    console.log('ICON_BUTTON_CLICK!!!!!!!!', text, userText);
+    const escapeText = (t) => {
+      return t.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, "\\n")
+    }
+    text = escapeText(text);
+    userText = escapeText(userText);
+    store.browser.window.focus();
+    await store.browser.window.webContents.executeJavaScript(`
+      (async () => {
+        const sleep = (msec) => new Promise(resolve => setTimeout(resolve, msec));
+        await sleep(600);
+        const modal = document.getElementById('radix-:rt:');
+        if (modal) {
+          await sleep(200);
+        }
+        const input = document.getElementById('prompt-textarea');
+        input.focus();
+        input.value = "${text}" + "\\n\\n\\n" + "${userText}";
+        await sleep(700);
+      })();
+    `);
+    robotjs.keyTap("space");
+    await sleep(10);
+    robotjs.keyTap("backspace");
+    await sleep(10);
+    robotjs.keyTap("enter");
+    await sleep(10);
+    robotjs.keyTap("tab");
+    await sleep(10);
+    robotjs.keyTap("enter");
+  });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
