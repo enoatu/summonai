@@ -11,7 +11,7 @@ import { getSelection } from 'node-selection';
 // docker
 // vscode
 // chrome devtool
-//
+// 表示位置おかしい
 // ## issue
 // ctrl + c でコピーできない
 // アイコン右下らへんクリックでアイコンが消えない
@@ -30,11 +30,11 @@ const store = {
     init: function() {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
-        console.log('[mousedown]')
+        // console.log('[mousedown]')
         const now = (new Date()).getTime()
         let diffTime = now - store.watchIcon.rendererClickTime;
         if (diffTime < 200) {
-          console.log('内部クリック1')
+          // console.log('内部クリック1')
           // |renderer     |now
           // -------------100ms
         } else {
@@ -44,10 +44,10 @@ const store = {
             diffTime = store.watchIcon.rendererClickTime - now;
             console.log("[diffTime]", diffTime);
             if (diffTime > 0 && diffTime < 200) {
-              console.log('内部クリック2')
+              // console.log('内部クリック2')
             } else {
-              console.log('外部クリック')
-              console.log('hide!!!!!!!!!!!!')
+              // console.log('外部クリック')
+              // console.log('hide!!!!!!!!!!!!')
               store.icon.hide();
             }
           });
@@ -80,15 +80,15 @@ const store = {
             const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
             let isSelectedEvent = false;
             if (isPressed && pressedTime > 100 && mouseDistance > 20) {
-              console.log("[mouseup]long press");
+              // console.log("[mouseup]long press");
               isSelectedEvent = true;
             }
             if (previousReleaseTime !== 0 && isDoubleClick) {
-              console.log("[mouseup]double click");
+              // console.log("[mouseup]double click");
               isSelectedEvent = true;
             }
             if (isSelectedEvent) {
-              console.log("[mouseup]selected event");
+              // console.log("[mouseup]selected event");
               const text = await getMacSelectedText()
               if (text) {
                 console.log("[mouseup]text", text);
@@ -101,10 +101,11 @@ const store = {
       uIOhook.on("wheel", async () => {
       });
       uIOhook.on("keyup", async (e) => {
+        store.watchControl.keydownTime = (new Date()).getTime();
       });
       uIOhook.on("keydown", async (e) => {
         // copy時にrobotjsで押下していることに注意
-        console.log("[keydown]", e.keycode);
+        // console.log("[keydown]", e.keycode);
       });
       uIOhook.start();
 
@@ -290,7 +291,6 @@ const getMacSelectedText = async () => {
     if (selection.text && replaceBlank(selection.text).length > 0) {
       text = selection.text;
     }
-    console.log('getSection Success');
   } catch (error) {
     console.log('getSection Failed');
     // releaseKeys();
@@ -344,6 +344,11 @@ const getSelectedTextByClipboard = async () => {
   }
   robotjs.keyToggle("c", "up", isMac ? "command" : "control");
   const selectedText = clipboard.readText();
+  if (selectedText === currentClipboardContent) {
+    clipboard.clear();
+    console.log("[getSelectedTextByClipboard]戻す3");
+    return "";
+  }
   console.log("new clipboard text : ", selectedText);
   clipboard.writeText(currentClipboardContent);
   return selectedText;

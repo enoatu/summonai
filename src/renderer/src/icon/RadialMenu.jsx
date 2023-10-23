@@ -6,11 +6,10 @@ function RadialMenu({ text }) {
   const [position, setPosition] = React.useState({ x: 150, y: 150 });
   const [hover, setHover] = React.useState(0);
 
-  // You can also use separate handler for each item
   const handleItemClick = (event, index, data) => {
     console.log(`[MenuItem] ${data} clicked`);
     window.api.ICON_BUTTON_CLICK({text, data});
-    setShow(false); // you should handle your menu visibility yourself
+    setShow(false);
   };
   const handleSubMenuClick = (event, index, data) => {
     console.log(`[SubMenu] ${data} clicked`);
@@ -25,7 +24,6 @@ function RadialMenu({ text }) {
   const b4 = 'これに対して何をすればいい?';
   const candidates = [b1, b2, b3, b4];
 
-  // ホバーするとその内容が表示される(文字が外に出る) tailwindcss absolute 使用
   const TextWrapper = ({ hover, children }) => {
     return (
       <span className="text-[8.5px] w-full h-full text-ellipsis">{children}</span>
@@ -34,7 +32,6 @@ function RadialMenu({ text }) {
 
   return (
     <div
-      // right click event
       onContextMenu={(e) => {
         e.preventDefault();
         setShow(true);
