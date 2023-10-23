@@ -143,23 +143,70 @@ const store = {
       this.window = new BrowserWindow({
         width: 500,
         height: screen.getPrimaryDisplay().size.height,
-        // 画面の右上に表示
-        position: { x: screen.getPrimaryDisplay().size.width - 500, y: 0},
+        x: screen.getPrimaryDisplay().size.width - 500,
+        y: 0,
         webPreferences: {
           nodeIntegration: true,
           preload: (path.join(__dirname, "../preload/browser.js")),
         },
-        transparent: true,
-        frame: false,
-        resizable: false,
-        alwaysOnTop: true,
-        movable: false,
-        show: false,
+        transparent: false,
+        frame: true,
+        resizable: true,
+        alwaysOnTop: false,
+        movable: true,
+        show: true,
         // skipTaskbar: true,
         // hasShadow: false,
         // type: "panel",
         focusable: true,
       });
+      this.window.loadURL('https://chat.openai.com/?model=text-davinci-002-render-sha');
+
+
+      this.window.on('ready-to-show', async () => {
+        await this.window.webContents.executeJavaScript(`
+          (async () => {
+            // 1. Mutation Observerを作成し、監視対象の要素を指定
+            // const targetElement = document.querySelector('body'); // 監視対象の要素を取得
+            // const observerConfig = { childList: true, subtree: true }; // Mutation Observerの設定
+
+            // const observer = new MutationObserver((mutationsList) => {
+            //   for (const mutation of mutationsList) {
+            //     if (mutation.addedNodes.length > 0) {
+            //       // 2. 追加されたノードに対して処理を行う
+            //       mutation.addedNodes.forEach((node) => {
+            //         if (node instanceof HTMLButtonElement && node.classList.contains('btn') && node.classList.contains('relative') && node.classList.contains('btn-primary')) {
+            //           // 3. 特定のクラスを持つ要素が追加された場合にクリックする
+            //           node.click();
+            //         }
+            //       });
+            //     }
+            //   }
+            // });
+
+            // // Mutation Observerを開始
+            // observer.observe(targetElement, observerConfig);
+            const sleep = (msec) => new Promise(resolve => setTimeout(resolve, msec));
+            await sleep(600);
+            const modal = document.getElementById('radix-:rt:');
+            if (modal) {
+              await sleep(200);
+            }
+            const input = document.getElementById('prompt-textarea');
+            input.focus();
+            input.value = "名言を１つ教えて";
+            await sleep(700);
+          })();
+        `);
+        robotjs.keyTap("space");
+        await sleep(10);
+        robotjs.keyTap("backspace");
+        await sleep(10);
+        robotjs.keyTap("tab");
+        await sleep(10);
+        robotjs.keyTap("enter");
+      });
+      this.window.webContents.openDevTools()
     },
   },
   icon: {
@@ -192,32 +239,32 @@ const store = {
       // this.window.setAlwaysOnTop(true, "floating");
      //  // this.window.setIgnoreMouseEvents(true);
 
-      const d = new BrowserWindow({
-        width: 800, // 幅と高さを最小に設定
-        height: 800,
-        position: { x: 0, y: 0 }, // 画面の左上に表示
-        webPreferences: {
-          nodeIntegration: true,
-          preload: (path.join(__dirname, "../preload/icon.js")),
-        },
-        // transparent: true,
-        // frame: false,
-        resizable: true,
-        // alwaysOnTop: true,
-        movable: true,
-        skipTaskbar: false,
-        hasShadow: false,
-        focusable: true,
-        title: "icon",
-      });
-      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-        d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
-      } else {
-        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      }
-      d.setAlwaysOnTop(true, "floating");
-      d.webContents.openDevTools()
+      // const d = new BrowserWindow({
+      //   width: 800, // 幅と高さを最小に設定
+      //   height: 800,
+      //   position: { x: 0, y: 0 }, // 画面の左上に表示
+      //   webPreferences: {
+      //     nodeIntegration: true,
+      //     preload: (path.join(__dirname, "../preload/icon.js")),
+      //   },
+      //   // transparent: true,
+      //   // frame: false,
+      //   resizable: true,
+      //   // alwaysOnTop: true,
+      //   movable: true,
+      //   skipTaskbar: false,
+      //   hasShadow: false,
+      //   focusable: true,
+      //   title: "icon",
+      // });
+      // //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      // if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+      //   d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
+      // } else {
+      //   d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+      // }
+      // d.setAlwaysOnTop(true, "floating");
+      // d.webContents.openDevTools()
       //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
@@ -356,10 +403,11 @@ const releaseKeysForShortSelect = () => {
 
 app.on("ready", async() => {
   const start = () => {
-    const { main, icon } = store;
+    const { main, icon, browser } = store;
     try {
       main.init();
       icon.create();
+      browser.create();
     } catch (error) {
       console.error("restart", error.trace, error)
       store = cloneStore;
