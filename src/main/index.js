@@ -11,10 +11,8 @@ import { getSelection } from 'node-selection';
 // docker
 // vscode
 // chrome devtool
-// 表示位置おかしい
 // ## issue
-// ctrl + c でコピーできない
-// アイコン右下らへんクリックでアイコンが消えない
+// bsのシート操作時にホバーが消える
 
 const ICON_SIZE = {
   WIDTH: 30,
@@ -43,7 +41,7 @@ const store = {
           sleep(200).then(() => {
             diffTime = store.watchIcon.rendererClickTime - now;
             console.log("[diffTime]", diffTime);
-            if (diffTime > 0 && diffTime < 200) {
+            if (diffTime > -100 && diffTime < 200) {
               // console.log('内部クリック2')
             } else {
               // console.log('外部クリック')
@@ -77,18 +75,18 @@ const store = {
           if (!store.icon.window.isVisible()) {
             const isPressed = previousReleaseTime < previousPressTime;
             const pressedTime = currentReleaseTime - previousPressTime;
-            const isDoubleClick = currentReleaseTime - previousReleaseTime < 700 && mouseDistance < 10;
+            const isDoubleClick = currentReleaseTime - previousReleaseTime < 200 && mouseDistance < 10;
             let isSelectedEvent = false;
-            if (isPressed && pressedTime > 100 && mouseDistance > 20) {
-              // console.log("[mouseup]long press");
+            if (isPressed && pressedTime > 200 && mouseDistance > 20) {
+              console.log("[mouseup]long press");
               isSelectedEvent = true;
             }
             if (previousReleaseTime !== 0 && isDoubleClick) {
-              // console.log("[mouseup]double click");
+              console.log("[mouseup]double click");
               isSelectedEvent = true;
             }
             if (isSelectedEvent) {
-              // console.log("[mouseup]selected event");
+              console.log("[mouseup]selected event");
               const text = await getMacSelectedText()
               if (text) {
                 console.log("[mouseup]text", text);
@@ -120,6 +118,7 @@ const store = {
     isIconSpread: false,
     iconClickTime: 0,
     isFirstSpread: false,
+    isOpenDevTool: false,
   },
   watchControl: {
     keydownTime: 0,
@@ -213,7 +212,7 @@ const store = {
         movable: false,
         show: false,
         // skipTaskbar: true,
-        // hasShadow: false,
+        hasShadow: false,
         // type: "panel",
         focusable: true,
       });
@@ -254,7 +253,11 @@ const store = {
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
       // この部分は必要なアクションに合わせてカスタマイズ
-      // icon.window.webContents.on('context-menu', showIcon);
+      this.window.webContents.on('context-menu', () => {
+        store.control.isOpenDevTool = true;
+        this.window.setSize(800, 800);
+        this.window.webContents.openDevTools()
+      })
       // アイコンが不要なときにウィンドウを非表示
       // 例: ウィンドウ外をクリックなどで非表示にする
       // この部分も必要なアクションに合わせてカスタマイズ
@@ -266,18 +269,22 @@ const store = {
       const { x, y } = store.control.prevReleasePosition;
       console.log("show", x, y);
       const iconSize = 30; // アイコンのサイズ(20px * 20px + margin 5px * 2)
-      // this.window.setSize(iconSize, iconSize);
+      this.window.setSize(iconSize, iconSize);
       this.window.webContents.send("ICON_SET_TEXT", text);
       this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
       this.window.setVisibleOnAllWorkspaces(true);
       this.window.showInactive();
     },
     hide: async function () {
+      if (store.control.isOpenDevTool) {
+        return;
+      }
       if (!this.window.isVisible()) {
         return;
       }
       console.log("hide");
       this.window.hide();
+      store.control.isIconSpread = false;
       this.window.webContents.send("ICON_UNSPREAD");
     },
   }
@@ -436,6 +443,7 @@ app.whenReady().then(() => {
     control.iconClickTime = (new Date()).getTime();
     watchIcon.rendererClickTime = control.iconClickTime;
 
+    console.log(store.icon.window.isVisible(), control.isIconSpread)
     if (store.icon.window.isVisible() && !control.isIconSpread) {// アイコン状態の時
       console.log('spread展開')
       const [winX, winY] = store.icon.window.getPosition();
