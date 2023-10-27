@@ -260,7 +260,7 @@ const store = {
       })
       // アイコンが不要なときにウィンドウを非表示
       // 例: ウィンドウ外をクリックなどで非表示にする
-      // この部分も必要なアクションに合わせてカスタマイズ
+      // この部分も必要なアクションに合わせてカスタマイ
       // this.window.on('blur', () => this.hide());
       // clickで消える
       // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
@@ -274,6 +274,10 @@ const store = {
       this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
       this.window.setVisibleOnAllWorkspaces(true);
       this.window.showInactive();
+      if (store.browser.window.isDestroyed()) {
+        console.log("browser is destroyed");
+        store.browser.create();
+      }
     },
     hide: async function () {
       if (store.control.isOpenDevTool) {
