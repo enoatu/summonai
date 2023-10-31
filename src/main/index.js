@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, screen, clipboard } from "electron";
 import { electronApp, is } from "@electron-toolkit/utils";
 import { uIOhook, UiohookKey } from 'uiohook-napi'
 import robotjs from '@jitsi/robotjs';
-import { sleep, isMac, removeBlank } from "@/utils";
+import { sleep, isMac, removeBlank, escapeText } from "@/utils";
 import path from "path";
 import { getSelection } from 'node-selection';
 // 検証用
@@ -24,7 +24,6 @@ const ICON_SPREAD_SIZE = {
 }
 const store = {
   main: {
-    isWillQuit: false,
     init: function() {
       console.log("init");
       uIOhook.on("mousedown", async (e) => {
@@ -59,7 +58,6 @@ const store = {
       uIOhook.on("mouseup", async (e) => {
         const { control } = store;
         if (e.button === 1) {
-
           const { x, y } = e;
           const currentReleaseTime = (new Date()).getTime();
 
@@ -100,15 +98,15 @@ const store = {
       uIOhook.on("keyup", async (e) => {
         store.watchControl.keydownTime = (new Date()).getTime();
       });
-      uIOhook.on("keydown", async (e) => {
-        // copy時にrobotjsで押下していることに注意
-        // console.log("[keydown]", e.keycode);
-      });
       uIOhook.start();
 
       // 以下の対策のために確認するようにする
       // hook_event_proc [990]: CGEventTap timeout!
     },
+    destroy: function() {
+      console.log("destroy");
+      uIOhook.stop();
+    }
   },
   control: {
     prevPressTime: 0,
@@ -432,10 +430,7 @@ function createWatcher() {
   store.watchIcon = new Proxy(store.watchIcon, handler);
 }
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId("com.enoatu");
-  // createWindow();
-  // createWatcher();
   ipcMain.handle('ICON_CLICK', async (event, arg) => {
     console.log('ICON_CLICK!!!!!!!!', arg);
     const { browser, control, watchIcon } = store;
@@ -446,42 +441,38 @@ app.whenReady().then(() => {
     control.iconClickTime = (new Date()).getTime();
     watchIcon.rendererClickTime = control.iconClickTime;
 
-    console.log(store.icon.window.isVisible(), control.isIconSpread)
     if (store.icon.window.isVisible() && !control.isIconSpread) {// アイコン状態の時
       console.log('spread展開')
       const [winX, winY] = store.icon.window.getPosition();
       const { x, y } = screen.getCursorScreenPoint();
-      console.log(x, y)
       console.log("[mousedown]icon click!!!!!!!!!");
       control.isIconSpread = true;
       store.icon.window.webContents.send("ICON_SPREAD");
       await sleep(100);
       store.icon.window.setSize(ICON_SPREAD_SIZE.WIDTH, ICON_SPREAD_SIZE.HEIGHT);
-      const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH, y: winY - ICON_SPREAD_SIZE.HEIGHT};
-      if (newPos.x < ICON_SPREAD_SIZE.WIDTH) {
+      // 左上にずらす
+      const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH/2, y: winY - ICON_SPREAD_SIZE.HEIGHT/2};
+      if (newPos.x < 0 ) {
         console.log(1)
-        newPos.x = ICON_SPREAD_SIZE.WIDTH/2;
+        newPos.x = 0;
       }
-      if (newPos.y < ICON_SPREAD_SIZE.HEIGHT) {
+      if (newPos.y < 0) {
         console.log(2)
-        newPos.y = ICON_SPREAD_SIZE.HEIGHT/2;
+        newPos.y = 0;
       }
       if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
         console.log(3)
-        newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH/2;
+        newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH;
       }
       if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
         console.log(4)
-        newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT/2;
+        newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT;
       }
       store.icon.window.setPosition(newPos.x, newPos.y);
     }
   })
   ipcMain.handle('ICON_BUTTON_CLICK', async (event, {text, data:userText}) => {
     console.log('ICON_BUTTON_CLICK!!!!!!!!', text, userText);
-    const escapeText = (t) => {
-      return t.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, "\\n")
-    }
     text = escapeText(text);
     userText = escapeText(userText);
     store.browser.window.focus();
@@ -517,7 +508,6 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("will-quit", async () => {
-  store.main.isWillQuit = true;
-  await sleep(2000);
+app.on("will-quit", () => {
+  store.main.destroy();
 });
