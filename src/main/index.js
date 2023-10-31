@@ -255,12 +255,6 @@ const store = {
         this.window.setSize(800, 800);
         this.window.webContents.openDevTools()
       })
-      // アイコンが不要なときにウィンドウを非表示
-      // 例: ウィンドウ外をクリックなどで非表示にする
-      // この部分も必要なアクションに合わせてカスタマイ
-      // this.window.on('blur', () => this.hide());
-      // clickで消える
-      // store.icon.window.on('focus', () => console.log('click') || store.isIconWindowVisible && store.icon.window.hide());
     },
     show: async function(text) {
       const { x, y } = store.control.prevReleasePosition;
@@ -306,10 +300,8 @@ const getMacSelectedText = async () => {
 function createVariableWatcher(variableName) {
   store.watchControl = cloneStore.watchControl;
   return new Promise((resolve) => {
-    console.log("[createVariableWatcher]start");
     const handler = {
       set(obj, prop, value) {
-      console.log("[createVariableWatcher]handler")
         console.log(obj, prop, value);
         if (prop === variableName) {
           console.log("[createVariableWatcher]set", value);
@@ -320,7 +312,6 @@ function createVariableWatcher(variableName) {
         return true;
       }
     };
-
     store.watchControl = new Proxy(store.watchControl, handler);
   });
 }
@@ -360,20 +351,6 @@ const getSelectedTextByClipboard = async () => {
 
 // キーが離される
 const releaseKeys = () => {
-  uIOhook.keyToggle(UiohookKey.Ctrl, "up");
-  uIOhook.keyToggle(UiohookKey.CtrlRight, "up");
-  uIOhook.keyToggle(UiohookKey.Alt, "up");
-  uIOhook.keyToggle(UiohookKey.AltRight, "up");
-  uIOhook.keyToggle(UiohookKey.Shift, "up");
-  uIOhook.keyToggle(UiohookKey.ShiftRight, "up");
-  uIOhook.keyToggle(UiohookKey.Space, "up");
-  uIOhook.keyToggle(UiohookKey.Meta, "up");
-  uIOhook.keyToggle(UiohookKey.MetaRight, "up");
-  uIOhook.keyToggle(UiohookKey.Tab, "up");
-  uIOhook.keyToggle(UiohookKey.Escape, "up");
-}
-
-const releaseKeysForShortSelect = () => {
   uIOhook.keyToggle(UiohookKey.Ctrl, "up");
   uIOhook.keyToggle(UiohookKey.CtrlRight, "up");
   uIOhook.keyToggle(UiohookKey.Alt, "up");
@@ -444,8 +421,6 @@ app.whenReady().then(() => {
     if (store.icon.window.isVisible() && !control.isIconSpread) {// アイコン状態の時
       console.log('spread展開')
       const [winX, winY] = store.icon.window.getPosition();
-      const { x, y } = screen.getCursorScreenPoint();
-      console.log("[mousedown]icon click!!!!!!!!!");
       control.isIconSpread = true;
       store.icon.window.webContents.send("ICON_SPREAD");
       await sleep(100);
@@ -453,19 +428,15 @@ app.whenReady().then(() => {
       // 左上にずらす
       const newPos = { x: winX - ICON_SPREAD_SIZE.WIDTH/2, y: winY - ICON_SPREAD_SIZE.HEIGHT/2};
       if (newPos.x < 0 ) {
-        console.log(1)
         newPos.x = 0;
       }
       if (newPos.y < 0) {
-        console.log(2)
         newPos.y = 0;
       }
       if (newPos.x > screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH) {
-        console.log(3)
         newPos.x = screen.getPrimaryDisplay().size.width - ICON_SPREAD_SIZE.WIDTH;
       }
       if (newPos.y > screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT) {
-        console.log(4)
         newPos.y = screen.getPrimaryDisplay().size.height - ICON_SPREAD_SIZE.HEIGHT;
       }
       store.icon.window.setPosition(newPos.x, newPos.y);
