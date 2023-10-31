@@ -59,6 +59,7 @@ const store = {
       uIOhook.on("mouseup", async (e) => {
         const { control } = store;
         if (e.button === 1) {
+
           const { x, y } = e;
           const currentReleaseTime = (new Date()).getTime();
 
@@ -180,8 +181,8 @@ const store = {
             }
             const input = document.getElementById('prompt-textarea');
             input.focus();
-            input.value = "名言を１つ教えて";
-            await sleep(700);
+            // input.value = "名言を１つ教えて";
+            // await sleep(700);
           })();
         `);
         robotjs.keyTap("space");
@@ -274,10 +275,6 @@ const store = {
       this.window.setPosition(x + 15, y + 15); // 右下にアイコンを表示
       this.window.setVisibleOnAllWorkspaces(true);
       this.window.showInactive();
-      if (store.browser.window.isDestroyed()) {
-        console.log("browser is destroyed");
-        store.browser.create();
-      }
     },
     hide: async function () {
       if (store.control.isOpenDevTool) {
@@ -443,7 +440,11 @@ app.whenReady().then(() => {
   // createWatcher();
   ipcMain.handle('ICON_CLICK', async (event, arg) => {
     console.log('ICON_CLICK!!!!!!!!', arg);
-    const { control, watchIcon } = store;
+    const { browser, control, watchIcon } = store;
+    if (browser.window.isDestroyed()) {
+      store.browser.create();
+      await sleep(1000);
+    }
     control.iconClickTime = (new Date()).getTime();
     watchIcon.rendererClickTime = control.iconClickTime;
 
