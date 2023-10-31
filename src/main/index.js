@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, screen, clipboard } from "electron";
 import { electronApp, is } from "@electron-toolkit/utils";
 import { uIOhook, UiohookKey } from 'uiohook-napi'
 import robotjs from '@jitsi/robotjs';
-import { sleep, isMac } from "@/utils";
+import { sleep, isMac, removeBlank } from "@/utils";
 import path from "path";
 import { getSelection } from 'node-selection';
 // 検証用
@@ -78,7 +78,7 @@ const store = {
             const pressedTime = currentReleaseTime - previousPressTime;
             const isDoubleClick = currentReleaseTime - previousReleaseTime < 200 && mouseDistance < 10;
             let isSelectedEvent = false;
-            if (isPressed && pressedTime > 200 && mouseDistance > 20) {
+            if (isPressed && pressedTime > 200 && mouseDistance > 15) {
               console.log("[mouseup]long press");
               isSelectedEvent = true;
             }
@@ -89,15 +89,13 @@ const store = {
             if (isSelectedEvent) {
               console.log("[mouseup]selected event");
               const text = await getMacSelectedText()
-              if (text) {
+              if (text && removeBlank(text).length > 0) {
                 console.log("[mouseup]text", text);
                 await store.icon.show(text);
               }
             }
           }
         }
-      });
-      uIOhook.on("wheel", async () => {
       });
       uIOhook.on("keyup", async (e) => {
         store.watchControl.keydownTime = (new Date()).getTime();
@@ -296,12 +294,12 @@ const getMacSelectedText = async () => {
   let text = "";
   try {
     const selection = await getSelection();
-    if (selection.text && replaceBlank(selection.text).length > 0) {
+    if (selection.text && removeBlank(selection.text).length > 0) {
       text = selection.text;
     }
   } catch (error) {
-    console.log('getSection Failed');
-    // releaseKeys();
+    console.log('getSection Failed', error);
+    // releaseKeys(); TODO: アプリケーションによって挙動を変えるか検討する
     text = await getSelectedTextByClipboard();
     console.log('getSelectedTextByClipboard Text=', text);
   }
@@ -511,16 +509,6 @@ app.whenReady().then(() => {
     await sleep(10);
     robotjs.keyTap("enter");
   });
-
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      // createWindow();
-    }
-  });
-
-  ipcMain.handle("test", () => {
-    console.log("test");
-  });
 });
 
 app.on("window-all-closed", () => {
@@ -529,11 +517,7 @@ app.on("window-all-closed", () => {
   }
 });
 
-app.on("focus", async () => {
-  console.log("focus");
-});
-// destractor
 app.on("will-quit", async () => {
   store.main.isWillQuit = true;
-  await sleep(1000);
+  await sleep(2000);
 });
