@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, screen, clipboard } from "electron";
+import { app, BrowserWindow, ipcMain, screen, clipboard, Menu } from "electron";
 import { electronApp, is } from "@electron-toolkit/utils";
 import { uIOhook, UiohookKey } from 'uiohook-napi'
 import robotjs from '@jitsi/robotjs';
@@ -189,7 +189,6 @@ const store = {
         await sleep(10);
         robotjs.keyTap("enter");
       });
-      this.window.webContents.openDevTools()
     },
   },
   icon: {
@@ -220,33 +219,6 @@ const store = {
       }
       this.window.setAlwaysOnTop(true, "floating");
 
-      const d = new BrowserWindow({
-        width: 800, // 幅と高さを最小に設定
-        height: 800,
-        position: { x: 0, y: 0 }, // 画面の左上に表示
-        webPreferences: {
-          nodeIntegration: true,
-          preload: (path.join(__dirname, "../preload/icon.js")),
-        },
-        // transparent: true,
-        // frame: false,
-        resizable: true,
-        // alwaysOnTop: true,
-        movable: true,
-        skipTaskbar: false,
-        hasShadow: false,
-        focusable: true,
-        title: "icon",
-      });
-      //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
-        d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
-      } else {
-        d.loadFile(path.join(__dirname, "../renderer/icon.html"));
-      }
-      d.setAlwaysOnTop(true, "floating");
-      d.webContents.openDevTools()
-      //
       // 必要なときにウィンドウを表示
       // 例: マウスの右クリックなどのアクションで表示する
       // この部分は必要なアクションに合わせてカスタマイズ
@@ -278,7 +250,12 @@ const store = {
       store.control.isIconSpread = false;
       this.window.webContents.send("ICON_UNSPREAD");
     },
-  }
+  },
+  setting: {
+    window: null,
+    create: function() {
+    },
+  },
 }
 const cloneStore = JSON.parse(JSON.stringify(store));
 
@@ -363,11 +340,89 @@ const releaseKeys = () => {
   uIOhook.keyToggle(UiohookKey.Tab, "up");
   uIOhook.keyToggle(UiohookKey.Escape, "up");
 }
+const setupMenu = () => {
+  const menu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        {
+          role: "quit"
+        }
+      ]
+    },
+    {
+      label: "Edit",
+      submenu: [
+        {
+          label: "CustomAsk",
+          click: async () => {
+            store.setting.create();
+          }
+        }
+      ]
+    },
+    {
+      label: "Toolbelt",
+      submenu: [
+        {
+          label: "Open DevTools",
+          click: () => {
+            if (store.browser.window.isVisible()) {
+              store.browser.window.webContents.openDevTools()
+            }
+            const d = new BrowserWindow({
+              width: 800, // 幅と高さを最小に設定
+              height: 800,
+              position: { x: 0, y: 0 }, // 画面の左上に表示
+              webPreferences: {
+                nodeIntegration: true,
+                preload: (path.join(__dirname, "../preload/icon.js")),
+              },
+              // transparent: true,
+              // frame: false,
+              resizable: true,
+              // alwaysOnTop: true,
+              movable: true,
+              skipTaskbar: false,
+              hasShadow: false,
+              focusable: true,
+              title: "icon",
+            });
+            //  d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+            if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+              d.loadURL(`${process.env["ELECTRON_RENDERER_URL"]}/icon.html`);
+            } else {
+              d.loadFile(path.join(__dirname, "../renderer/icon.html"));
+            }
+            d.setAlwaysOnTop(true, "floating");
+            d.webContents.openDevTools()
+          }
+        },
+      ],
+    },
+    {
+      role: "windowMenu"
+    },
+    {
+      label: "Information",
+      submenu: [
+        {
+          label: "Help",
+          click: async () => {
+            await shell.openExternal(constants.webHelpPageUrl);
+          }
+        }
+      ]
+    }
+  ]);
+  Menu.setApplicationMenu(menu);
+}
 
 app.on("ready", async() => {
   const start = () => {
     const { main, icon, browser } = store;
     try {
+      setupMenu();
       main.init();
       icon.create();
       browser.create();
@@ -460,6 +515,7 @@ app.whenReady().then(() => {
         await sleep(700);
       })();
     `);
+    await sleep(10);
     robotjs.keyTap("space");
     await sleep(10);
     robotjs.keyTap("backspace");
