@@ -327,17 +327,17 @@ const getSelectedTextByClipboard = async () => {
     return "";
   }
   keydownDetecter = createVariableWatcher("keydownTime");
-  console.log("do copy");
+  console.log("do copy down", "c", "down", isMac ? "command" : "control");
   // clipboard.clear();
   robotjs.keyToggle("c", "down", isMac ? "command" : "control");
   isKeydown = await Promise.race([sleep(50), keydownDetecter])
   if (isKeydown) {
-    console.log(isKeydown);
     clipboard.writeText(currentClipboardContent);
     console.log("[getSelectedTextByClipboard]戻す2");
     return "";
   }
   robotjs.keyToggle("c", "up", isMac ? "command" : "control");
+  console.log("do copy up", "c", "up", isMac ? "command" : "control");
   const selectedText = clipboard.readText();
   if (selectedText === currentClipboardContent) {
     clipboard.clear();
@@ -382,7 +382,6 @@ app.on("ready", async() => {
 
 function createWatcher() {
   store.watchIcon = cloneStore.watchIcon
-  console.log("[createWatcher]start");
   const handler = {
     async set(obj, prop, value) {
       console.log("[createWatcher]watch", prop)
