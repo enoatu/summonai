@@ -342,25 +342,23 @@ const releaseKeys = () => {
 }
 const setupMenu = () => {
   const menu = Menu.buildFromTemplate([
+	// { role: 'appMenu' }
     {
+
       label: app.name,
       submenu: [
+        {
+          label: 'Preferences',
+          click: async () => {
+            store.setting.create();
+          },
+        },
         {
           role: "quit"
         }
       ]
     },
-    {
-      label: "Edit",
-      submenu: [
-        {
-          label: "CustomAsk",
-          click: async () => {
-            store.setting.create();
-          }
-        }
-      ]
-    },
+    { role: "editMenu" }, // 一緒にcopy などができるように登録される
     {
       label: "Toolbelt",
       submenu: [
@@ -515,7 +513,6 @@ app.whenReady().then(() => {
         await sleep(700);
       })();
     `);
-    await sleep(10);
     robotjs.keyTap("space");
     await sleep(10);
     robotjs.keyTap("backspace");
