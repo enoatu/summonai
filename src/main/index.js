@@ -13,6 +13,7 @@ import { getSelection } from 'node-selection';
 // chrome devtool
 // ## issue
 // bsのシート操作時にホバーが消える
+// hook_event_proc [990]: CGEventTap timeout!
 
 const ICON_SIZE = {
   WIDTH: 30,
@@ -146,49 +147,49 @@ const store = {
       });
       this.window.loadURL('https://chat.openai.com/?model=text-davinci-002-render-sha');
 
-      this.window.on('ready-to-show', async () => {
-        await this.window.webContents.executeJavaScript(`
-          (async () => {
-            // 1. Mutation Observerを作成し、監視対象の要素を指定
-            // const targetElement = document.querySelector('body'); // 監視対象の要素を取得
-            // const observerConfig = { childList: true, subtree: true }; // Mutation Observerの設定
+      // this.window.on('ready-to-show', async () => {
+      //   await this.window.webContents.executeJavaScript(`
+      //     (async () => {
+      //       // 1. Mutation Observerを作成し、監視対象の要素を指定
+      //       // const targetElement = document.querySelector('body'); // 監視対象の要素を取得
+      //       // const observerConfig = { childList: true, subtree: true }; // Mutation Observerの設定
 
-            // const observer = new MutationObserver((mutationsList) => {
-            //   for (const mutation of mutationsList) {
-            //     if (mutation.addedNodes.length > 0) {
-            //       // 2. 追加されたノードに対して処理を行う
-            //       mutation.addedNodes.forEach((node) => {
-            //         if (node instanceof HTMLButtonElement && node.classList.contains('btn') && node.classList.contains('relative') && node.classList.contains('btn-primary')) {
-            //           // 3. 特定のクラスを持つ要素が追加された場合にクリックする
-            //           node.click();
-            //         }
-            //       });
-            //     }
-            //   }
-            // });
+      //       // const observer = new MutationObserver((mutationsList) => {
+      //       //   for (const mutation of mutationsList) {
+      //       //     if (mutation.addedNodes.length > 0) {
+      //       //       // 2. 追加されたノードに対して処理を行う
+      //       //       mutation.addedNodes.forEach((node) => {
+      //       //         if (node instanceof HTMLButtonElement && node.classList.contains('btn') && node.classList.contains('relative') && node.classList.contains('btn-primary')) {
+      //       //           // 3. 特定のクラスを持つ要素が追加された場合にクリックする
+      //       //           node.click();
+      //       //         }
+      //       //       });
+      //       //     }
+      //       //   }
+      //       // });
 
-            // // Mutation Observerを開始
-            // observer.observe(targetElement, observerConfig);
-            const sleep = (msec) => new Promise(resolve => setTimeout(resolve, msec));
-            await sleep(600);
-            const modal = document.getElementById('radix-:rt:');
-            if (modal) {
-              await sleep(200);
-            }
-            const input = document.getElementById('prompt-textarea');
-            input.focus();
-            // input.value = "名言を１つ教えて";
-            // await sleep(700);
-          })();
-        `);
-        robotjs.keyTap("space");
-        await sleep(10);
-        robotjs.keyTap("backspace");
-        await sleep(10);
-        robotjs.keyTap("tab");
-        await sleep(10);
-        robotjs.keyTap("enter");
-      });
+      //       // // Mutation Observerを開始
+      //       // observer.observe(targetElement, observerConfig);
+      //       const sleep = (msec) => new Promise(resolve => setTimeout(resolve, msec));
+      //       await sleep(600);
+      //       const modal = document.getElementById('radix-:rt:');
+      //       if (modal) {
+      //         await sleep(200);
+      //       }
+      //       const input = document.getElementById('prompt-textarea');
+      //       input.focus();
+      //       // input.value = "名言を１つ教えて";
+      //       // await sleep(700);
+      //     })();
+      //   `);
+      //   robotjs.keyTap("space");
+      //   await sleep(10);
+      //   robotjs.keyTap("backspace");
+      //   await sleep(10);
+      //   robotjs.keyTap("tab");
+      //   await sleep(10);
+      //   robotjs.keyTap("enter");
+      // });
     },
   },
   icon: {
@@ -465,7 +466,6 @@ app.whenReady().then(() => {
     const { browser, control, watchIcon } = store;
     if (browser.window.isDestroyed()) {
       store.browser.create();
-      await sleep(1000);
     }
     control.iconClickTime = (new Date()).getTime();
     watchIcon.rendererClickTime = control.iconClickTime;
